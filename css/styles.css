@@ -2,7 +2,7 @@ body {
   background-color: #070707;
 }
 
-card {
+.card {
   width: 75px;
   height: 100px;
   border: 1px solid #999;
