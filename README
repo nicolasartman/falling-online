@@ -6,5 +6,3 @@ Hit the ground last. It's not much of a goal, but it's all you could think of on
 This is a direct recreation of the original card game in all its gravity-not-defying glory, with real-time multiplayer for up to 6 players.
 
 All intellectual property for the source game (C) James Ernest and Cheapass Games. Go buy their games - they are awesome and cheap!
-
-**NOTE: this game uses the impactjs game engine, which is not included in this repository. If you wish to run your own copy of this game, you must own a license for impactjs.**
