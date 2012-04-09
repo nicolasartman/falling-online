@@ -1,3 +1,20 @@
+/*global 
+ jquery:true,
+ $:true,
+ us: true,
+ window: true,
+ Backbone: true,
+ _: true,
+ CardList: true,
+ CardView: true,
+ RiderView: true,
+ RiderList: true
+*/
+
+// ====================
+// = Basic Data Views =
+// ====================
+
 window.CardView = Backbone.View.extend({
   tagName: 'div',
   className: "card",
@@ -46,7 +63,7 @@ window.CardView = Backbone.View.extend({
 })
 
 
-var RiderView = Backbone.View.extend({
+window.RiderView = Backbone.View.extend({
   // attaches 'this.el' to an existing element.
   tagName: 'div',
   className: 'rider',
@@ -65,13 +82,10 @@ var RiderView = Backbone.View.extend({
   }
 })
 
-/*global
- jquery:true,
- $:true,
- us: true,
- Backbone: true,
- _: true,
-*/
+// ====================
+// = Collection Views =
+// ====================
+
 window.CardListView = Backbone.View.extend({
 
   events: {
@@ -79,21 +93,26 @@ window.CardListView = Backbone.View.extend({
   },
 
   initialize: function() {
-    _.bindAll(this, 'render')
+    _.bindAll(this)
 
     this.cards = new CardList()
+    this.cards.on('add', this.addOne)
 
     this.render(); // not all views are self-rendering. This one is.
   },
 
   addOne: function (card) {
-    this.cards.add(card) // add to the collection
-    var view = new CardView({ model: card }) // make a new cardview and render it
+    var view = new CardView({ model: card })
     this.$el.append(view.el)
   },
+  
+  addCard: function(card) {
+    this.cards.add(card)
+  },
+  
 
   render: function() {
-    return this.$el
+    return this
   }
 })
 
@@ -108,8 +127,8 @@ window.RiderListView = Backbone.View.extend({
     
     this.riders = new RiderList()
     this.riders.on('add', this.render)
-    
-    this.render(); // not all views are self-rendering. This one is.
+
+    this.render()
   },
   
   addRiders: function(riders) {
@@ -118,11 +137,11 @@ window.RiderListView = Backbone.View.extend({
   
   render: function(){
     _.each(this.riders, function (rider) {
-      $(this.el).append(rider.el);        
+      this.$el.append(rider.el)
     })
+    return this
   }
 })
-
 
 window.AppView = Backbone.View.extend({
 
@@ -136,11 +155,11 @@ window.AppView = Backbone.View.extend({
     this.cardListView = new CardListView({ tagName:'div', id: 'cards' })
     this.riderListView = new RiderListView({ tagName:'div', id: 'riders' })
 
-    this.render() // not all views are self-rendering. This one is.
+    this.render()
   },
 
   addCard: function (card) {
-    this.cardListView.addOne(card)
+    this.cardListView.addCard(card)
   },
   
   addRiders: function(riders) {
@@ -148,6 +167,6 @@ window.AppView = Backbone.View.extend({
   },
   
   render: function () {
-    return this.$el
+    return this.$el.append(this.cardListView.el).append(this.riderListView.el)
   }
 })
