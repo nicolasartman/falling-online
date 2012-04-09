@@ -21,7 +21,6 @@ window.CardView = Backbone.View.extend({
   events: {
     'click': 'toggleKind',
     'dragstart': 'startDrag',
-    'dragstop': 'stopDrag'
   },
 
   initialize: function () {
@@ -56,10 +55,6 @@ window.CardView = Backbone.View.extend({
     console.log("success")
   },
   
-  stopDrag: function (event) {
-    return false
-  }
-  
 })
 
 
@@ -87,6 +82,9 @@ window.RiderView = Backbone.View.extend({
 // ====================
 
 window.CardListView = Backbone.View.extend({
+
+  tagName:'div',
+  id: 'cards',
 
   events: {
     // 'click button#add': 'callback'
@@ -118,6 +116,9 @@ window.CardListView = Backbone.View.extend({
 
 window.RiderListView = Backbone.View.extend({
   
+  tagName: 'div',
+  id: 'riders',
+  
   events: {
     // 'click button#add': 'callback'
   },
@@ -130,14 +131,18 @@ window.RiderListView = Backbone.View.extend({
 
     this.render()
   },
-  
+
   addRiders: function(riders) {
     this.riders.add(riders)
   },
   
-  render: function(){
-    _.each(this.riders, function (rider) {
-      this.$el.append(rider.el)
+  render: function() {
+    var self = this
+    console.log(this.riders)
+    this.$el.html("")
+    _.each(this.riders.models, function (rider) {
+      console.log(rider)
+      self.$el.append(rider.el)
     })
     return this
   }
@@ -152,8 +157,8 @@ window.AppView = Backbone.View.extend({
   initialize: function () {
     _.bindAll(this, 'render');
 
-    this.cardListView = new CardListView({ tagName:'div', id: 'cards' })
-    this.riderListView = new RiderListView({ tagName:'div', id: 'riders' })
+    this.cardListView = new CardListView()
+    this.riderListView = new RiderListView()
 
     this.render()
   },
@@ -161,11 +166,11 @@ window.AppView = Backbone.View.extend({
   addCard: function (card) {
     this.cardListView.addCard(card)
   },
-  
+
   addRiders: function(riders) {
     this.riderListView.addRiders(riders)
   },
-  
+
   render: function () {
     return this.$el.append(this.cardListView.el).append(this.riderListView.el)
   }
