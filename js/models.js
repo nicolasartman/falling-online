@@ -36,3 +36,14 @@ window.CardList = Backbone.Collection.extend({
     }
   }
 })
+
+window.Rider = Backbone.Model.extend({
+  defaults: {
+    card: null
+  }
+})
+
+window.RiderList = Backbone.Collection.extend({
+  model: Rider
+})
+

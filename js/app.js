@@ -8,10 +8,12 @@
 */
 
 $(document).ready(function () {
-  var app = new AppView()
 
-  app.addCard(new Card({ kind: "Hit" }))
-  app.addCard(new Card({ kind: "Push"}))
+  window.app = new AppView({el: $('#playing-field') })
+
+  app.addRiders(new Rider())
+  app.addCard(new Card({ kind: "Hit"  }))
+  app.addCard(new Card({ kind: "Push" }))
 
 })
 
