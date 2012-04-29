@@ -40,7 +40,39 @@ window.CardList = Backbone.Collection.extend({
 window.Rider = Backbone.Model.extend({
   defaults: {
     card: null
+  },
+  
+  initialize: function() {
+    
+  },  
+  
+  hasCard: function () {
+    return this.get('card') !== null
+  },
+  
+  addCard: function(card) {
+    if (!(card instanceof Card)) {
+      console.log("Not a card:") 
+      console.log(card)
+    } else if (this.get('card') === null) {
+      this.set({ "card": card })
+      console.log("Rider now has a " + this.get('card').get('kind') + " card on it")
+      // TODO: clean up
+      return true
+    } else {
+      console.log("Rider Already Has Card")
+    }
+    return false
+  },
+
+  clearCard: function() {
+    if (this.hasCard()) {
+      this.get('card').destroy()
+      // TODO: make it automatically react to its card being destroyed by setting it to null
+      this.set('card', null)
+    }
   }
+  
 })
 
 window.RiderList = Backbone.Collection.extend({

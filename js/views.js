@@ -1,4 +1,4 @@
-/*global 
+/*global
  jquery:true,
  $:true,
  us: true,
@@ -8,34 +8,42 @@
  CardList: true,
  CardView: true,
  RiderView: true,
- RiderList: true
+ RiderList: true,
+ CardListView: true,
+ RiderListView: true
 */
 
 // ====================
 // = Basic Data Views =
 // ====================
 
+"use strict";
+
 window.CardView = Backbone.View.extend({
   tagName: 'div',
-  className: "card",
+  className: 'card',
   events: {
     'click': 'toggleKind',
     'dragstart': 'startDrag',
+    'droppedOn': 'droppedOn'
   },
 
   initialize: function () {
     _.bindAll(this)
-    this.$el.draggable({ zIndex: 9001 })
+    // this.$el.draggable({
+    //   stack: ".card",
+    //   containment: 'document'
+    // })
 
     this.model.on('destroy', this.destroyView)
     this.model.on('change', this.render)
 
-    this.render() // not all views are self-rendering. This one is.
+    this.render()
   },
 
   destroyView: function () {
     this.off()
-    this.model.off(null, null, this) // unbind
+    this.model.off(null, null, this) // unbind everything
     this.remove() // remove from the dom
   },
 
@@ -44,35 +52,75 @@ window.CardView = Backbone.View.extend({
   },
 
   // Controller Logic
+  droppedOn: function(event, riderView) {
+    // Returns true if the card was accepted onto the rider spot
+    if (riderView.model.addCard(this.model)) {
+      this.$el.draggable('disable') // card should no longer be draggable
+      this.$el.offset(riderView.$el.offset())
+    }
+  },
+
   toggleKind: function () {
     this.model.set({
       kind: 'test'
     })
   },
-  
+
   startDrag: function(event) {
     this.inHand = true
-    console.log("success")
-  },
-  
+  }
 })
 
 
 window.RiderView = Backbone.View.extend({
-  // attaches 'this.el' to an existing element.
   tagName: 'div',
   className: 'rider',
-  
+
   events: {
     // 'click button#add': 'callback'
   },
-  
-  initialize: function(){
-    _.bindAll(this, 'render')
+
+  initialize: function() {
+    var self = this
+
+    _.bindAll(this)
+
+    if (!this.model) {
+      this.model = new Rider()
+    }
+
+    this.model.on('destroy', this.destroyView)
+    this.model.on('change', this.render)
+    this.on('droppedOn', this.droppedOn)
+
+    this.$el.droppable({
+      accept: ".card",
+      activate: function (event, ui) {
+        if (!self.model.hasCard()) {
+          self.$el.addClass('available-rider')
+        }
+      },
+      deactivate: function(event, ui) {
+        self.$el.removeClass('available-rider')
+      },
+      over: function (event, ui) {
+        $(ui.draggable).addClass('card-hovering-rider')
+      },
+      out: function(event, ui) {
+        $(ui.draggable).removeClass('card-hovering-rider')
+      },
+      drop: function (event, ui) {
+        // TODO: put this somewhere it will be triggered any time a card is added to a rider
+        self.$el.removeClass('available-rider')
+        ui.draggable.trigger('droppedOn', self)
+      }
+    })
+
     this.render()
   },
-  
-  render: function(){
+
+  render: function() {
+    console.log("rendering")
     return this.$el
   }
 })
@@ -84,7 +132,7 @@ window.RiderView = Backbone.View.extend({
 window.CardListView = Backbone.View.extend({
 
   tagName:'div',
-  id: 'cards',
+  className: 'stack',
 
   events: {
     // 'click button#add': 'callback'
@@ -94,20 +142,14 @@ window.CardListView = Backbone.View.extend({
     _.bindAll(this)
 
     this.cards = new CardList()
-    this.cards.on('add', this.addOne)
 
     this.render(); // not all views are self-rendering. This one is.
   },
 
-  addOne: function (card) {
-    var view = new CardView({ model: card })
-    this.$el.append(view.el)
+  addCardView: function (cardView) {
+    this.cards.add(cardView.model)
+    this.$el.append(cardView.$el)
   },
-  
-  addCard: function(card) {
-    this.cards.add(card)
-  },
-  
 
   render: function() {
     return this
@@ -115,19 +157,19 @@ window.CardListView = Backbone.View.extend({
 })
 
 window.RiderListView = Backbone.View.extend({
-  
+
   tagName: 'div',
   id: 'riders',
-  
+
   events: {
     // 'click button#add': 'callback'
   },
-  
-  initialize: function(){
+
+  initialize: function() {
     _.bindAll(this)
-    
+
     this.riders = new RiderList()
-    this.riders.on('add', this.render)
+    this.riders.on('add', this.addRiderView)
 
     this.render()
   },
@@ -135,15 +177,56 @@ window.RiderListView = Backbone.View.extend({
   addRiders: function(riders) {
     this.riders.add(riders)
   },
-  
+
+  addRiderView: function (rider) {
+    var view = new RiderView({ model: rider })
+    this.$el.append(view.$el)
+  },
+
   render: function() {
-    var self = this
-    console.log(this.riders)
-    this.$el.html("")
-    _.each(this.riders.models, function (rider) {
-      console.log(rider)
-      self.$el.append(rider.el)
-    })
+    return this
+  }
+})
+
+window.PlayerView = Backbone.View.extend({
+
+  tagName: 'div',
+  className: 'player',
+
+  events: {
+    // 'click button#add': 'callback'
+  },
+
+  initialize: function () {
+    _.bindAll(this)
+    
+    this.stacks = []
+    this.addStack()
+    
+    this.riderView = new RiderView()
+    this.$el.append(this.riderView.$el)
+  },
+
+  addStack: function () {
+    var view = new CardListView()
+    this.stacks.push(view)
+    this.$el.append(view.$el)
+  },
+  
+  dealCard: function(cardView, stackNumber) {
+    if (stackNumber === undefined || stackNumber >= this.stacks.length) {
+      console.log("Invalid stack number for player: " + stackNumber)
+    }
+    else {    
+      this.stacks[stackNumber].addCardView(cardView)
+    }
+  },
+  
+  clearRider: function() {
+    this.riderView.model.clearCard()
+  },  
+  
+  render: function () {
     return this
   }
 })
@@ -155,23 +238,64 @@ window.AppView = Backbone.View.extend({
   },
 
   initialize: function () {
-    _.bindAll(this, 'render');
+    _.bindAll(this);
 
-    this.cardListView = new CardListView()
+    this.playerViews = []
+    
+    if (this.options.players) {
+      for (var i = this.options.players - 1; i >= 0; i--) {
+        this.addPlayer()
+      }
+    }
+    
     this.riderListView = new RiderListView()
 
     this.render()
-  },
-
-  addCard: function (card) {
-    this.cardListView.addCard(card)
   },
 
   addRiders: function(riders) {
     this.riderListView.addRiders(riders)
   },
 
+  addPlayer: function(options) {
+    var view = new PlayerView()
+    this.playerViews.push(view)
+    this.$el.append(view.$el)
+  },
+
+  dealCard: function(cardView, playerNumber, stackNumber) {
+    if (playerNumber === undefined || playerNumber >= this.playerViews.length) {
+      console.log("Invalid player number: " + playerNumber)
+    }
+    else {
+      this.playerViews[playerNumber].dealCard(cardView, stackNumber)
+    }
+  },
+  
+  addStack: function(playerNumber) {
+    if (playerNumber === undefined || playerNumber >= this.playerViews.length) {
+      console.log("Invalid player number: " + playerNumber)
+    }
+    else {
+      this.playerViews[playerNumber].addStack()
+    }    
+  },  
+  
+  clearRider: function(playerNumber) {
+    if (playerNumber === undefined || playerNumber >= this.playerViews.length) {
+      console.log("Invalid player number: " + playerNumber)
+    }
+    else {
+      this.playerViews[playerNumber].clearRider()
+    }    
+  },
+  
+  playerCount: function() {
+    return this.playerViews.length
+  },
+  
+  
   render: function () {
-    return this.$el.append(this.cardListView.el).append(this.riderListView.el)
+    return this
   }
 })
