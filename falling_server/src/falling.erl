@@ -77,7 +77,7 @@ deal(Game) ->
   case Game#fgame.deal_stage of
     rider ->
       handle_rider(Game);
-    hits when [] = Game#fgame.deck->
+    hits when length(Game#fgame.deck) > 0->
       Target=get_player(Game#fgame.deal_player, Game),
       [Card | Remain] = Game#fgame.deck,
       Stack = get_stack(Game#fgame.deal_stack,Target),
@@ -86,23 +86,40 @@ deal(Game) ->
       setup_deal(DealtGame#fgame{hit_count=DealtGame#fgame.hit_count + 1, deck=Remain});
     hits ->
       Target=get_player(Game#fgame.deal_player, Game),
-      NextGame = case Target.hand of
+      NextGame = case Target#fplayer.hand of
         stop ->
           DealtPlayer = Target#fplayer{hand=none},
           DealtGame=set_player(Game#fgame.deal_player, Game, DealtPlayer),
-          setup_deal(DealtGame#fgame{hit_count=DealtGame#fgame.hit_count + 1};
+          setup_deal(DealtGame#fgame{hit_count=DealtGame#fgame.hit_count + 1});
         _OtherCard ->
           DeadPlayer = Target#fplayer{dead=true},
           DealtGame=set_player(Game#fgame.deal_player, Game, DeadPlayer),
           setup_deal_player(DealtGame)
-      end
+      end,
       case get_winner(NextGame) of
         none ->
           NextGame;
         Winner ->
-          {game_over, Winnter, NextGame}
+          {game_over, Winner, NextGame}
       end
   end.
+
+get_winner(Game) ->
+  % TODO go through all the players and find a not dead one
+  none.
+
+cleanup_stacks(Player) ->
+  FirstStack = hd(Player#fplayer.stacks),
+  CleanedStacks = [ Stack || Stack <- Player#fplayer.stacks, length(Stack#fstack.cards) > 0 ],
+  NextStacks = case CleanedStacks of
+    [] ->
+      [FirstStack];
+    Stacks ->
+      Stacks
+  end,
+  Player#fplayer{stacks=NextStacks}.
+      
+      
 
 handle_rider(Game) ->
   Player = get_player(Game#fgame.deal_player, Game),
@@ -111,7 +128,7 @@ handle_rider(Game) ->
   NextGame = set_player(Player#fplayer.id, Game, Clean),
   RiderHandled = case Player#fplayer.rider of
     none ->
-      {NextGame};
+      NextGame;
     hit ->
       NextGame#fgame{hit_max = 2 + Player#fplayer.extras};
     skip when length(NextGame#fgame.deck) > 0 ->
@@ -133,20 +150,44 @@ setup_deal(Game) ->
       setup_deal_stack(Game)
   end.
 
+%TODO make sure the player isn't dead
+next_player(CurPlayerNum, GamePlayers) ->
+  NextPlayerNum = CurPlayerNum +1,
+  case GamePlayers of
+    Players when length(Players) >= NextPlayerNum ->
+      NextPlayerNum;
+    _Players ->
+      io:format("Next Stack: ~w~n", [NextPlayerNum]),
+      io:format("Stacks length: ~w~n", [length(GamePlayers)]),
+      1
+  end.
+
+next_stack(CurStackNum, Player) ->
+  NextStackNum = CurStackNum + 1,
+  io:format("Next Stack: ~w~n", [NextStackNum]),
+  io:format("Stacks length: ~w~n", [length(Player#fplayer.stacks)]),
+  case Player#fplayer.stacks of
+    Stacks when length(Stacks) >= NextStackNum ->
+      NextStackNum;
+    _Stacks ->
+      none
+  end.
+
 setup_deal_stack(Game) ->
   Target=get_player(Game#fgame.deal_player, Game),
   NextStack = next_stack(Game#fgame.deal_stack, Target),
   case NextStack of
     none ->
-      setup_deal_payer(Game);
-    Stack ->
-      Game#fgame{deal_stack=Stack, hit_count=0}
+      setup_deal_player(Game);
+    StackNum ->
+      Game#fgame{deal_stack=StackNum, hit_count=0}
   end.
 
 setup_deal_player(Game) ->
-  NextPlayer = next_player(Game#fgame.deal_player, Game#fgame.players),
+  NextPlayerNum = next_player(Game#fgame.deal_player, Game#fgame.players),
+  NextPlayer = get_player(NextPlayerNum, Game),
   TopStack = hd(NextPlayer#fplayer.stacks),
-  Game#fgame{hit_count=0, deal_stack=TopStack#fstack.id, deal_stage=rider}.
+  Game#fgame{deal_player=NextPlayerNum, hit_count=0, deal_stack=TopStack#fstack.id, deal_stage=rider}.
 
 draw_card(PlayerId, StackId, Game) ->
   Player = get_player(PlayerId, Game),
