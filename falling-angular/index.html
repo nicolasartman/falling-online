@@ -1,0 +1,17 @@
+<html>
+<head>
+  <script src="http://code.angularjs.org/angular-1.0.0rc10.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.js" type="text/javascript"></script>
+  <script src="app.js" type="text/javascript" charset="utf-8"></script>
+  <link rel="stylesheet" href="../css/styles.css" type="text/css">
+</head>
+<body>
+  <div ng-app="falling">
+    <div ng-controller="CardListController">
+      <card ng-repeat="card in cards" class="card">Card {{card.number}}</card>
+      <rider ng-repeat="rider in riders" class="rider"></rider>
+    </div>
+  </div>
+</body>
+<html>
