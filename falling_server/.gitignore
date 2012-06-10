@@ -1,0 +1,5 @@
+ebin
+rel/falling_server
+deps
+*.swp
+*.swo

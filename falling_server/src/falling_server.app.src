@@ -1,0 +1,13 @@
+{application, falling_server,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {modules, [ falling, falling_server_app, falling_server_sup] },
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { falling_server_app, []}},
+  {env, []}
+ ]}.
