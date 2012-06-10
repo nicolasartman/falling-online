@@ -17,6 +17,11 @@ $(document).ready(function () {
   app.dealCard(new CardView({
     model: (new Card({kind: "Hit"})) 
   }), 0, 0)
+  app.addStack(0)
+  app.dealCard(new CardView({
+    model: (new Card({kind: "Hit"})) 
+  }), 0, 1)
+  
 
   $("body").append($('<a />', {
     "href": '#',

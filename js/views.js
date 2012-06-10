@@ -30,15 +30,16 @@ window.CardView = Backbone.View.extend({
 
   initialize: function () {
     _.bindAll(this)
-    // this.$el.draggable({
-    //   stack: ".card",
-    //   containment: 'document'
-    // })
 
     this.model.on('destroy', this.destroyView)
     this.model.on('change', this.render)
 
     this.render()
+
+    this.$el.draggable({
+      stack: ".card",
+      containment: 'document'
+    })
   },
 
   destroyView: function () {
@@ -199,10 +200,10 @@ window.PlayerView = Backbone.View.extend({
 
   initialize: function () {
     _.bindAll(this)
-    
+
     this.stacks = []
     this.addStack()
-    
+
     this.riderView = new RiderView()
     this.$el.append(this.riderView.$el)
   },
@@ -212,20 +213,20 @@ window.PlayerView = Backbone.View.extend({
     this.stacks.push(view)
     this.$el.append(view.$el)
   },
-  
+
   dealCard: function(cardView, stackNumber) {
     if (stackNumber === undefined || stackNumber >= this.stacks.length) {
       console.log("Invalid stack number for player: " + stackNumber)
     }
-    else {    
+    else {
       this.stacks[stackNumber].addCardView(cardView)
     }
   },
-  
+
   clearRider: function() {
     this.riderView.model.clearCard()
-  },  
-  
+  },
+
   render: function () {
     return this
   }
@@ -241,13 +242,13 @@ window.AppView = Backbone.View.extend({
     _.bindAll(this);
 
     this.playerViews = []
-    
+
     if (this.options.players) {
       for (var i = this.options.players - 1; i >= 0; i--) {
         this.addPlayer()
       }
     }
-    
+
     this.riderListView = new RiderListView()
 
     this.render()
@@ -271,30 +272,30 @@ window.AppView = Backbone.View.extend({
       this.playerViews[playerNumber].dealCard(cardView, stackNumber)
     }
   },
-  
+
   addStack: function(playerNumber) {
     if (playerNumber === undefined || playerNumber >= this.playerViews.length) {
       console.log("Invalid player number: " + playerNumber)
     }
     else {
       this.playerViews[playerNumber].addStack()
-    }    
-  },  
-  
+    }
+  },
+
   clearRider: function(playerNumber) {
     if (playerNumber === undefined || playerNumber >= this.playerViews.length) {
       console.log("Invalid player number: " + playerNumber)
     }
     else {
       this.playerViews[playerNumber].clearRider()
-    }    
+    }
   },
-  
+
   playerCount: function() {
     return this.playerViews.length
   },
-  
-  
+
+
   render: function () {
     return this
   }
