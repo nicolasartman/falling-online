@@ -148,29 +148,34 @@ cleanup_stacks(Player) ->
 
 handle_rider(Game) ->
   Player = get_player(Game#fgame.deal_player, Game#fgame.players),
-  NoRider = Player#fplayer{rider=none, extras=0},
-  Clean = cleanup_stacks(NoRider),
-  NextGame = set_player(Player#fplayer.id, Game, Clean),
-  { RiderHandled, Moved } = case Player#fplayer.rider of
+  Clean = cleanup_stacks(Player),
+  { RiderHandled, NextPlayer, Moved } = case Player#fplayer.rider of
     none ->
-      {NextGame, false};
+      {Game, Clean, false};
     hit ->
-      {NextGame#fgame{hit_max = 2 + Player#fplayer.extras}, true};
-    skip when length(NextGame#fgame.deck) > 0 ->
-      {setup_deal_player(NextGame), true};
+      {Game#fgame{hit_max = 2 + Player#fplayer.extras},
+       Clean#fplayer{rider=none, extras=0},true};
+    skip when length(Game#fgame.deck) == 0 ->
+      {Game, Clean#fplayer{rider=none, extras=0}, true};
+    skip when Clean#fplayer.extras > 0->
+      {setup_deal_player(Game), Clean#fplayer{extras=Clean#fplayer.extras - 1}, extra};
     skip ->
-      {NextGame, true};
+      {setup_deal_player(Game), Clean#fplayer{rider=none}, true};
     split ->
       SplitPlayer = add_stacks(1+Player#fplayer.extras, Clean),
-      {set_player(Player#fplayer.id, NextGame, SplitPlayer), true}
+      {set_player(Player#fplayer.id, Game, SplitPlayer),
+       Clean#fplayer{rider=none, extras=0},true}
   end,
+  NextGame = set_player(Player#fplayer.id, RiderHandled, NextPlayer),
   DeltaList = case Moved of
+    extra ->
+      [ {card_move, {Player#fplayer.id, rider}, trash, extra } ];
     true ->
       [ {card_move, {Player#fplayer.id, rider}, trash, Player#fplayer.rider } ];
     false ->
       []
   end,
-  { RiderHandled#fgame{deal_stage=hits}, DeltaList }.
+  { NextGame#fgame{deal_stage=hits}, DeltaList }.
     
 
 setup_deal(Game) ->
@@ -230,99 +235,117 @@ draw_card(PlayerId, StackId, Game) ->
   case Player#fplayer.hand of
     none ->
       Stack = get_stack(StackId, Player),
-      [Card | Remain] = Stack#fstack.cards,
-      NewStackPlayer = set_stack(StackId,Player, Stack#fstack{cards=Remain}),
-      DrawPlayer = NewStackPlayer#fplayer{hand=Card},
-      set_player(PlayerId, Game, DrawPlayer);
+      case Stack#fstack.cards of
+        [] ->
+          {Game, []};
+        [Card | Remain] ->
+          Stack#fstack.cards,
+          NewStackPlayer = set_stack(StackId,Player, Stack#fstack{cards=Remain}),
+          DrawPlayer = NewStackPlayer#fplayer{hand=Card},
+          { set_player(PlayerId, Game, DrawPlayer),
+            [{card_move, {PlayerId, StackId}, {PlayerId, hand}, Card}]}
+      end;
     _SomeCard ->
-      Game
+      { Game, [] }
   end.
   
 play_card(FromPlayerId, ToPlayerId, Game) ->
   FromPlayer = get_player(FromPlayerId, Game#fgame.players),
   case FromPlayer#fplayer.hand of
     none ->
-      Game;
+      { Game, [] };
     Card when FromPlayerId == ToPlayerId ->
-      NextFromPlayer = do_card(Card, FromPlayer, on_self),
-      set_player(FromPlayerId, Game, NextFromPlayer);
+      {NextFromPlayer, Deltas} = do_card(Card, FromPlayer, on_self),
+      {set_player(FromPlayerId, Game, NextFromPlayer), Deltas};
     Card ->
       ToPlayer = get_player(ToPlayerId, Game#fgame.players),
-      {NextFromPlayer, NextToPlayer} = do_card(Card, FromPlayer, ToPlayer),
+      {NextFromPlayer, NextToPlayer, Deltas} = do_card(Card, FromPlayer, ToPlayer),
       FromUpdate = set_player(FromPlayerId, Game, NextFromPlayer),
-      set_player(ToPlayerId, FromUpdate, NextToPlayer)
+      {set_player(ToPlayerId, FromUpdate, NextToPlayer), Deltas}
     end.
 
 do_card(grab, Player, on_self) ->
-  Player;
+  { Player, [] };
 do_card(grab, FromPlayer, ToPlayer) ->
   case FromPlayer#fplayer.rider of
     none ->
       case ToPlayer#fplayer.rider of
         none ->
-          {FromPlayer, ToPlayer};
+          {FromPlayer, ToPlayer, []};
         Rider ->
           { FromPlayer#fplayer{hand=none, rider=Rider},
-            ToPlayer#fplayer{rider=none} }
+            ToPlayer#fplayer{rider=none},
+            [{card_move, {FromPlayer#fplayer.id, hand}, trash, grab},
+             {card_move, {ToPlayer#fplayer.id, rider}, {FromPlayer#fplayer.id, rider}, Rider}]}
       end;
     _Rider ->
-      {FromPlayer, ToPlayer}
+      {FromPlayer, ToPlayer, []}
   end;
 do_card(push, Player, on_self) ->
-  Player;
+  { Player, [] };
 do_card(push, FromPlayer, ToPlayer) ->
   case ToPlayer#fplayer.rider of
     none ->
       case FromPlayer#fplayer.rider of
         none ->
-          { FromPlayer, ToPlayer };
+          { FromPlayer, ToPlayer, [] };
         Rider ->
           { FromPlayer#fplayer{hand=none, rider=none},
-            ToPlayer#fplayer{rider=Rider} }
+            ToPlayer#fplayer{rider=Rider},
+            [{card_move, {FromPlayer#fplayer.id, hand}, trash, push},
+             {card_move, {FromPlayer#fplayer.id, rider}, {ToPlayer#fplayer.id, rider}, Rider}]}
       end;
     _Rider ->
-      {FromPlayer, ToPlayer}
+      {FromPlayer, ToPlayer, []}
   end;
 do_card(stop, Player, on_self) ->
   case Player#fplayer.rider of
     none ->
-      Player;
-    _Rider ->
-      Player#fplayer{hand=none, rider=none}
+      {Player, []};
+    Rider ->
+      { Player#fplayer{hand=none, rider=none},
+        [{card_move, {Player#fplayer.id, hand}, trash, push},
+         {card_move, {Player#fplayer.id, rider}, trash, Rider}] }
   end;
 do_card(stop, FromPlayer, ToPlayer) ->
   case FromPlayer#fplayer.rider of
     none ->
-      {FromPlayer, ToPlayer};
-    _Rider ->
-      {FromPlayer#fplayer{hand=none}, ToPlayer#fplayer{rider=none}}
+      {FromPlayer, ToPlayer, []};
+    Rider ->
+      {FromPlayer#fplayer{hand=none}, ToPlayer#fplayer{rider=none},
+        [{card_move, {FromPlayer#fplayer.id, hand}, trash, push},
+         {card_move, {ToPlayer#fplayer.id, rider}, trash, Rider}] }
   end;
 do_card(extra, Player, on_self) ->
   case Player#fplayer.rider of
     none ->
-      Player;
+      {Player,[]};
     _Rider ->
-      Player#fplayer{extras=Player#fplayer.extras + 1}
+      { Player#fplayer{extras=Player#fplayer.extras + 1},
+        [{card_move, {Player#fplayer.id, hand}, {Player#fplayer.id, rider}, extra}]}
   end;
 do_card(extra, FromPlayer, ToPlayer) ->
   case ToPlayer#fplayer.rider of
     none ->
       {FromPlayer, ToPlayer};
     _Rider ->
-      {FromPlayer#fplayer{hand=none}, ToPlayer#fplayer{extras=ToPlayer#fplayer.extras + 1}}
+      {FromPlayer#fplayer{hand=none}, ToPlayer#fplayer{extras=ToPlayer#fplayer.extras + 1},
+        [{card_move, {FromPlayer#fplayer.id, hand}, {ToPlayer#fplayer.id, rider}, extra}]}
   end;
 do_card(Rider, Player, on_self) ->
   case Player#fplayer.rider of
     none ->
-      Player#fplayer{hand = none, rider = Rider};
+      { Player#fplayer{hand = none, rider = Rider},
+        [{card_move, {Player#fplayer.id, hand}, {Player#fplayer.id, rider}, Rider}]};
     _Rider ->
-      Player
+      { Player, []}
   end;
 do_card(Rider, FromPlayer, ToPlayer) ->
   case ToPlayer#fplayer.rider of
     none ->
-      {FromPlayer#fplayer{hand=none}, ToPlayer#fplayer{rider=Rider}};
+      {FromPlayer#fplayer{hand=none}, ToPlayer#fplayer{rider=Rider},
+        [{card_move, {FromPlayer#fplayer.id, hand}, {ToPlayer#fplayer.id, rider}, Rider}]};
     _Rider ->
-      {FromPlayer, ToPlayer}
+      {FromPlayer, ToPlayer, []}
   end.
 
