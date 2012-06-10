@@ -13,10 +13,10 @@ body {
   position: absolute;
   top: 0px;
   left: 0px;
-  transition: -webkit-transform         0.5s;
-  -moz-transition: -webkit-transform    0.5s; /* Firefox 4 */
-  -webkit-transition: -webkit-transform 0.5s; /* Safari and Chrome */
-  -o-transition: -webkit-transform      0.5s; /* Opera */
+  transition: -webkit-transform         0.25s;
+  -moz-transition: -webkit-transform    0.25s; /* Firefox 4 */
+  -webkit-transition: -webkit-transform 0.25s; /* Safari and Chrome */
+  -o-transition: -webkit-transform      0.25s; /* Opera */
   width: 75px;
   height: 100px;
   border: 1px solid #999;
@@ -29,12 +29,17 @@ body {
 }
 
 .stack {
-  position: absolute;
-  top: 50px;
-  left: 120px;
+  position: relative;
+  float: left;
+  top: 0px;
+  margin-left: 40px;
   width:77px;
   height: 102px;
-  border: 1px solid red;
+/*  border: 1px solid red;*/
+
+  -moz-box-shadow:    3px 3px 5px #999; /* FF3.5+ */
+  -webkit-box-shadow: 3px 3px 5px #999; /* Saf3+, Chrome */
+  box-shadow:         3px 3px 5px #999; /* Standard. Opera 10.5, IE9 */
 }
 
 .rider {
