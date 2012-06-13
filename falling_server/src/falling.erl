@@ -96,7 +96,7 @@ deal(Game) ->
           DealtPlayer = Target#fplayer{hand=none},
           DealtGame=set_player(Game#fgame.deal_player, Game, DealtPlayer),
           { setup_deal(DealtGame#fgame{hit_count=DealtGame#fgame.hit_count + 1}),
-            [{card_move, deck, trash, ground},{card_move, {player, hand}, trash, stop}] };
+            [{card_move, deck, trash, ground},{card_move, {Target#fplayer.id, hand}, trash, stop}] };
         _OtherCard ->
           DeadPlayer = Target#fplayer{dead=true},
           DealtGame=set_player(Game#fgame.deal_player, Game, DeadPlayer),
