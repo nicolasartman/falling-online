@@ -2,25 +2,28 @@
 
 var us = _.noConflict()
 
-// The global game state
+/* The global game state */
 var state = {}
 
-function dealCard
+function dealCard(playerNumber, stackNumber, card) {
+  state.players[playerNumber].stacks[stackNumber].push(card)
+  // angular.$apply()
+}
 
 function PlayerListController($scope) {
   var playerCount = 5
-  
-  $scope.players = []
+  state.players = []
+  $scope.players = state.players
   
   for (var playerNum = 0; playerNum < playerCount; playerNum++){
-    $scope.players.push({
+    state.players.push({
       playerNumber: playerNum,
       rider: {
         card: null
       },
       stacks: [[]]
     })
-  }  
+  }
 }
 
 function CardListController($scope) {
