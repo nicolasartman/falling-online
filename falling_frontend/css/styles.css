@@ -7,7 +7,7 @@ body {
   position:relative;
   width: 300px;
   height: 200px;
-  border: 1px solid #09f;
+  border: 1px dashed #87A;
 }
 
 .card {
@@ -53,6 +53,10 @@ body {
   border: 1px solid #000;
   background-color: #222;
   z-index: 0;
+}
+/* a card on a rider */
+.rider > .card {
+  -webkit-transform:rotate(90deg);
 }
 
 /* Added to each rider that does not have a card already on it during a card drag event */

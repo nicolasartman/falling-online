@@ -10,13 +10,15 @@
 <body>
   <div ng-app="falling">
     <div ng-controller="PlayerListController">
-        <!-- TODO: add card class into directive -->
-      <card id="hand" class="card" ng-model="myHand" ng-show="myHand">{{myHand.number}}</card>
+      <!-- TODO: add card class into directive -->
+      <card id="hand" class="card" ng-controller="HandController" ng-model="myHand" ng-show="myHand">{{myHand.number}}</card>
       <div class="player" ng-repeat="(pnum, player) in players" id="player-{{pnum}}">
         <div ng-controller="CardListController">
           <card ng-repeat="card in cards" class="card">Card {{$index}}</card>
         </div>
-          <rider ng-controller="RiderController" class="rider"></rider>
+          <rider ng-controller="RiderController" ng-model="rider" class="rider">
+            <card class="card" ng-controller="HandController" ng-model="rider.card" ng-show="rider.card">{{rider.card.number}}</card>
+          </rider>
       </div>
     </div>
   </div>
