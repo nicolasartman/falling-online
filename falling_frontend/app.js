@@ -15,22 +15,24 @@ var state = {}
 var myPlayerNumber = 0
 
 $(document).ready(function ($) {
+  var $hand = angular.element($('#hand')).scope()
   $(document).bind('mousemove', function (event) {
-    var x = (event.pageX - ($('#hand').width() / 2.0)),
-    y = (event.pageY - ($('#hand').height() / 2.0))
-    $('#hand').offset({left: x, top: y })
+    if ($hand.hasCard()) {
+      var x = (event.pageX - ($('#hand').width() / 2.0)),
+      y = (event.pageY - ($('#hand').height() / 2.0))
+      $('#hand').offset({left: x, top: y })      
+    }
   })
   .bind('mouseup', function (cursor) {
     $('.rider').each(function (index) {
       var rider = $(this)
-      // hit test
+      // hit test - if the player is attempting to play their hand onto this
       if ((cursor.pageX > rider.offset().left && // left edge
           cursor.pageX < rider.offset().left + rider.width()) && // right edge
           (cursor.pageY > rider.offset().top && // top edge
           cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
         var $rider = angular.element(this).scope()
-        var $hand = angular.element($('#hand')).scope()
-        // If card is successfully played, clear the hand
+        // If card is successfully played on thie rider, clear the hand
         // TODO: account for invalidated plays
         if ($rider.playCard($hand.myHand)) {
           $hand.clearHand()
@@ -50,6 +52,10 @@ $(document).ready(function ($) {
 //   // angular.$apply()
 // }
 
+function GameController($scope) {
+  
+}
+
 function PlayerListController($scope) {
   var playerCount = 5
   state.players = []
@@ -66,21 +72,34 @@ function PlayerListController($scope) {
     })
   }
   
-  $scope.pickUpCard = function (card) {
-    if (!$scope.myHand) {
-      $scope.myHand = card
-      return true
-    } else {
-      return false
-    }
-    // $scope.$apply()
-  }
+  // $scope.pickUpCard = function (card) {
+  //   if (!$scope.myHand) {
+  //     $scope.myHand = card
+  //     return true
+  //   } else {
+  //     return false
+  //   }
+  //   // $scope.$apply()
+  // }
 }
 
 function HandController($scope) {
+  $scope.card = null
+  
+  $scope.drawCard = function (card) {
+    if (!$scope.card) {
+      $scope.card = card      
+    }
+    return $scope.hasCard()
+  }
+  
+  $scope.hasCard = function () {
+    return $scope.card !== null
+  }
+  
   $scope.clearHand = function () {
     console.log($scope)
-    // $scope.myHand = null
+    $scope.card = null
   }
 }
 
@@ -132,37 +151,38 @@ fallingModule.directive("rider", function () {
   return {
     restrict:"E", // it's an html element
     link: function ($scope, element, attrs) {
-      // $(element).droppable({
-      //         accept: ".card",
-      //         activate: function (event, ui) {
-      //           // if (!self.model.hasCard()) {
-      //             element.addClass('available-rider')
-      //           // }
-      //         },
-      //         deactivate: function(event, ui) {
-      //           element.removeClass('available-rider')
-      //         },
-      //         over: function (event, ui) {
-      //           $(ui.draggable).addClass('card-hovering-rider')
-      //         },
-      //         out: function(event, ui) {
-      //           $(ui.draggable).removeClass('card-hovering-rider')
-      //         },
-      //         drop: function (event, ui) {
-      //           // TODO: put this somewhere it will be triggered any time a card is added to a rider
-      //           element.removeClass('available-rider')
-      //           // If play was successful, center card on the rider
-      //           if ($scope.playCard($scope, {card:"snargle"})) {
-      //             // console.log(angular.element(ui.draggable).scope())
-      //             ui.draggable.offset($(element).offset())
-      //             ui.draggable.draggable('disable')
-      //           }
-      //         }
-      //       })
       $(element).on('mouseup', function (event) {
         console.log("card dropped on rider test")
-      }).draggable()
-      
+      }).draggable()      
     }
   }
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
