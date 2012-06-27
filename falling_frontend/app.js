@@ -127,7 +127,7 @@ fallingModule.directive("rider", function () {
 
 fallingModule.directive("hand", function () {
   return {
-    restrict: "E",
+    restrict: "A",
     link: function ($scope, element, attrs) {
       $(document).bind('mousemove', function (event) {
         if ($scope.hasCard()) {

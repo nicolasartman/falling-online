@@ -9,7 +9,7 @@
 </head>
 <body>
   <div id="app" ng-app="falling" ng-controller="GameController">
-    <card id="hand" class="card" ng-controller="HandController" ng-model="card" ng-show="myHand">{{myHand.number}}</card>
+    <card hand id="hand" class="card" ng-controller="HandController" ng-model="card" ng-show="myHand">{{myHand.number}}</card>
     <div ng-controller="PlayerListController">
       <!-- TODO: add card class into directive -->
       <div class="player" ng-repeat="(pnum, player) in players" id="player-{{pnum}}">
