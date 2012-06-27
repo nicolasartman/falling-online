@@ -14,39 +14,6 @@ var us = _.noConflict()
 var state = {}
 var myPlayerNumber = 0
 
-$(document).ready(function ($) {
-  var $hand = angular.element($('#hand')).scope()
-  $(document).bind('mousemove', function (event) {
-    if ($hand.hasCard()) {
-      var x = (event.pageX - ($('#hand').width() / 2.0)),
-      y = (event.pageY - ($('#hand').height() / 2.0))
-      $('#hand').offset({left: x, top: y })      
-    }
-  })
-  .bind('mouseup', function (cursor) {
-    $('.rider').each(function (index) {
-      var rider = $(this)
-      // hit test - if the player is attempting to play their hand onto this
-      if ((cursor.pageX > rider.offset().left && // left edge
-          cursor.pageX < rider.offset().left + rider.width()) && // right edge
-          (cursor.pageY > rider.offset().top && // top edge
-          cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
-        var $rider = angular.element(this).scope()
-        // If card is successfully played on thie rider, clear the hand
-        // TODO: account for invalidated plays
-        if ($rider.playCard($hand.myHand)) {
-          $hand.clearHand()
-          console.log("drop callback")
-          console.log($hand)
-          // Don't let player draw another card until the move is validated
-          $hand.pendingValidation = true
-        }
-      }
-    })
-  })
-})
-
-
 // function dealCard(playerNumber, stackNumber, card) {
 //   state.players[playerNumber].stacks[stackNumber].push(card)
 //   // angular.$apply()
@@ -158,7 +125,42 @@ fallingModule.directive("rider", function () {
   }
 })
 
-
+fallingModule.directive("hand", function () {
+  return {
+    restrict: "E",
+    link: function ($scope, element, attrs) {
+      $(document).bind('mousemove', function (event) {
+        if ($scope.hasCard()) {
+          $('#hand').offset({
+            left: (event.pageX - ($('#hand').width() / 2.0)),
+            top: (event.pageY - ($('#hand').height() / 2.0))  
+          })      
+        }
+      })
+      .bind('mouseup', function (cursor) {
+        $('.rider').each(function (index) {
+          var rider = $(this)
+          // hit test - if the player is attempting to play their hand onto this
+          if ((cursor.pageX > rider.offset().left && // left edge
+              cursor.pageX < rider.offset().left + rider.width()) && // right edge
+              (cursor.pageY > rider.offset().top && // top edge
+              cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
+            var $rider = angular.element(this).scope()
+            // If card is successfully played on thie rider, clear the hand
+            // TODO: account for invalidated plays
+            if ($rider.playCard($hand.myHand)) {
+              $hand.clearHand()
+              console.log("drop callback")
+              console.log($hand)
+              // Don't let player draw another card until the move is validated
+              $hand.pendingValidation = true
+            }
+          }
+        })
+      })
+    }
+  }
+})
 
 
 
