@@ -80,10 +80,10 @@ function GameController($scope) {
     
     if (!rider.card && card.kind !== "extra") {
       rider.card = card;
-      setMyHand(null)
+      setMyHand(null);
     } else if (rider.card && card.kind === "extra") {
       rider.extras += 1;
-      setMyHand(null)
+      setMyHand(null);
     }
     $scope.$apply();
   };
@@ -105,12 +105,12 @@ fallingModule.directive("hand", function () {
     restrict: "A",
     link: function ($scope, element, attrs) {
       $(document).bind('mousemove', function (event) {
-        if ($scope.getMyHand()) {
-          $('#hand').offset({
-            left: (event.pageX - ($('#hand').width() / 2.0)),
-            top: (event.pageY - ($('#hand').height() / 2.0))
-          });
-        }
+        // if ($scope.getMyHand()) {
+        $('#hand').offset({
+          left: (event.pageX - ($('#hand').width() / 2.0)),
+          top: (event.pageY - ($('#hand').height() / 2.0))
+        });
+        // }
       })
       .bind('mouseup', function (cursor) {
         $('.rider').each(function (index) {
