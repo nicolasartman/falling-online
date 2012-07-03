@@ -9,15 +9,15 @@
 </head>
 <body>
   <div id="app" ng-app="falling" ng-controller="GameController">
-    <card hand id="hand" class="card" ng-controller="HandController" ng-model="card" ng-show="myHand">{{myHand.number}}</card>
-    <div ng-controller="PlayerListController">
+    <card hand id="hand" class="card" ng-show="getMyHand()">{{getMyHand().number}}</card>
+    <div>
       <!-- TODO: add card class into directive -->
-      <div class="player" ng-repeat="(pnum, player) in players" id="player-{{pnum}}">
-        <div ng-controller="CardListController">
-          <card ng-repeat="card in cards" class="card">Card {{$index}}</card>
+      <div class="player" ng-repeat="(pnum, player) in gameState.players" id="player-{{pnum}}">
+        <div ng-repeat="stack in getStacks(pnum)">
+          <card ng-repeat="card in stack" class="card">Card {{$index}}</card>
         </div>
-          <rider ng-controller="RiderController" ng-model="rider" class="rider">
-            <card class="card" ng-controller="HandController" ng-model="rider.card" ng-show="rider.card">{{rider.card.number}}</card>
+          <rider class="rider">
+            <card class="card" ng-show="rider.card">{{rider.card.number}}</card>
           </rider>
       </div>
     </div>

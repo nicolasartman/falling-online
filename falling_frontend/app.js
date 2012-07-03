@@ -10,34 +10,52 @@
 
 var us = _.noConflict();
 
-/* The global game state */
-var state = {};
 var myPlayerNumber = 0;
 
-// function dealCard(playerNumber, stackNumber, card) {
-//   state.players[playerNumber].stacks[stackNumber].push(card)
-//   // angular.$apply()
-// }
-
 function GameController($scope) {
-  $scope.playerctrl = { players: [] };
-}
+  $scope.gameState = {
+    players: []
+  };
 
-function PlayerListController($scope) {
-  var playerCount = 5;
-  state.players = [];
-  $scope.players = state.players;
-
-  for (var playerNum = 0; playerNum < playerCount; playerNum++) {
-    state.players.push({
-      playerNumber: playerNum,
-      hand: null,
-      rider: {
-        card: null
-      },
-      stacks: [[]]
-    });
-  }
+  // Sets up a new game with the specified number of players
+  $scope.newGame = function (playerCount) {
+    for (var playerNum = 0; playerNum < playerCount; playerNum++) {
+      $scope.gameState.players.push({
+        playerNumber: playerNum,
+        hand: null,
+        rider: {
+          card: null
+        },
+        stacks: [[]]
+      });
+    }
+  };
+  
+  $scope.removeCard = function (index) {
+    $scope.cards.splice(index, 1);
+  };
+  
+  // Gets all stacks for a player
+  $scope.getStacks = function (playerNumber) {
+    return $scope.gameState.players[playerNumber].stacks;
+  };
+  
+  $scope.getMyHand = function () {
+    return $scope.gameState.players[myPlayerNumber].hand;
+  };
+  
+  var setMyHand = function (card) {
+    $scope.gameState.players[myPlayerNumber].hand = card;
+  };
+  
+  $scope.drawCard = function (card) {
+    if (!$scope.getMyHand()) {
+      setMyHand(card);
+    }
+  };
+  
+  // TODO: remove
+  $scope.newGame(4);
 
   // $scope.pickUpCard = function (card) {
   //   if (!$scope.myHand) {
@@ -48,38 +66,6 @@ function PlayerListController($scope) {
   //   }
   //   // $scope.$apply()
   // }
-}
-
-function HandController($scope) {
-  $scope.card = null;
-
-  $scope.drawCard = function (card) {
-    if (!$scope.card) {
-      $scope.card = card;
-    }
-    return $scope.hasCard();
-  };
-
-  $scope.hasCard = function () {
-    return $scope.card !== null;
-  };
-
-  $scope.clearHand = function () {
-    console.log($scope);
-    $scope.card = null;
-  };
-}
-
-function CardListController($scope) {
-  $scope.cards = [
-    { number: 1 },
-    { number: 2 },
-    { number: 3 }
-  ];
-
-  $scope.removeCard = function (index) {
-    $scope.cards.splice(index, 1);
-  };
 }
 
 function RiderController($scope) {
