@@ -57,10 +57,10 @@ function GameController($scope) {
     }
   };
 
-  $scope.getRider = function (playerNumber) {
-    return $scope.gameState.players[playerNumber].rider;
+  $scope.getRiderCard = function (playerNumber) {
+    return $scope.gameState.players[playerNumber].rider.card;
   };
-
+  
   // TODO: remove
   $scope.newGame(4);
 
@@ -80,13 +80,12 @@ function GameController($scope) {
     
     if (!rider.card && card.kind !== "extra") {
       rider.card = card;
-      return true;
+      setMyHand(null)
     } else if (rider.card && card.kind === "extra") {
       rider.extras += 1;
-      return true;
-    } else {
-      return false;
+      setMyHand(null)
     }
+    $scope.$apply();
   };
   
   $scope.clearRider = function (playerNumber) {
@@ -97,6 +96,7 @@ function GameController($scope) {
 
   // TODO: remove in prod
   $scope.dealCard(myPlayerNumber, 0, { name: "cheese", number: 22 });
+  $scope.dealCard(myPlayerNumber, 0, { name: "cheesier", number: 222 });
 }
 
 
@@ -114,18 +114,19 @@ fallingModule.directive("hand", function () {
       })
       .bind('mouseup', function (cursor) {
         $('.rider').each(function (index) {
+          var playerNumber = $(this).attr("playerNumber");
           var rider = $(this);
+          var $rider = angular.element(this).scope();
+          
           // hit test - if the player is attempting to play their hand onto this
           if ((cursor.pageX > rider.offset().left && // left edge
               cursor.pageX < rider.offset().left + rider.width()) && // right edge
               (cursor.pageY > rider.offset().top && // top edge
               cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
-            var $rider = angular.element(this).scope();
-            // If card is successfully played on thie rider, clear the hand
+            
+
             // TODO: account for invalidated plays
-            if ($rider.playCard()) {
-              $scope.pendingValidation = true;
-            }
+            $rider.playCard(playerNumber);
           }
         });
       });
