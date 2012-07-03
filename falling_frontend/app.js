@@ -12,6 +12,8 @@ var us = _.noConflict();
 
 var myPlayerNumber = 0;
 
+var fallingModule = new angular.module("falling", []);
+
 function GameController($scope) {
   $scope.gameState = {
     players: []
@@ -24,153 +26,104 @@ function GameController($scope) {
         playerNumber: playerNum,
         hand: null,
         rider: {
-          card: null
+          card: null,
+          extras: 0
         },
         stacks: [[]]
       });
     }
   };
-  
+
   $scope.removeCard = function (index) {
     $scope.cards.splice(index, 1);
   };
-  
+
   // Gets all stacks for a player
   $scope.getStacks = function (playerNumber) {
     return $scope.gameState.players[playerNumber].stacks;
   };
-  
+
   $scope.getMyHand = function () {
     return $scope.gameState.players[myPlayerNumber].hand;
   };
-  
+
   var setMyHand = function (card) {
     $scope.gameState.players[myPlayerNumber].hand = card;
   };
-  
+
   $scope.drawCard = function (card) {
     if (!$scope.getMyHand()) {
       setMyHand(card);
     }
   };
-  
+
+  $scope.getRider = function (playerNumber) {
+    return $scope.gameState.players[playerNumber].rider;
+  };
+
   // TODO: remove
   $scope.newGame(4);
 
-  // $scope.pickUpCard = function (card) {
-  //   if (!$scope.myHand) {
-  //     $scope.myHand = card
-  //     return true
-  //   } else {
-  //     return false
-  //   }
-  //   // $scope.$apply()
-  // }
+  $scope.pickUpCardFromStack = function (stackNumber) {
+    if (!$scope.getMyHand()) {
+      setMyHand($scope.gameState.players[myPlayerNumber].stacks[stackNumber].pop());
+    }
+  };
+
+  $scope.dealCard = function (playerNumber, stackNumber, card) {
+    $scope.gameState.players[playerNumber].stacks[stackNumber].push(card);
+  };
+  
+  $scope.playCard = function (playerNumber) {
+    var player = $scope.gameState.players[playerNumber];
+    if (!player.rider) {
+      
+    }
+  };
+  
+  $scope.clearRider = function (playerNumber) {
+    // TODO: add condition for skip
+    $scope.gameState.players[playerNumber].rider.card = null;
+    $scope.gameState.players[playerNumber].rider.extras = 0;
+  };
+
+  // TODO: remove in prod
+  $scope.dealCard(myPlayerNumber, 0, { name: "cheese", number: 22 });
 }
 
-function RiderController($scope) {
-
-  $scope.rider = $scope.$parent.player.rider;
-
-  $scope.playCard = function (card) {
-    // console.log("playCard"); console.log($scope)
-    if (!$scope.rider.card) {
-      $scope.rider.card = card;
-      return true;
-    } else {
-      return false;
-    }
-  };
-}
-
-var fallingModule = new angular.module("falling", []);
-
-fallingModule.directive("card", function () {
-  return {
-    restrict:"E",
-    link: function ($scope, element, attrs) {
-      $(element).on('mousedown', function (event, $index) {
-        // attempt to pick up the card
-        if ($scope.pickUpCard($scope.card)) {
-          $scope.removeCard($scope.$index);
-        }
-        $scope.$apply();
-      });
-    }
-  };
-});
-
-fallingModule.directive("rider", function () {
-  return {
-    restrict:"E", // it's an html element
-    link: function ($scope, element, attrs) {
-      $(element).on('mouseup', function (event) {
-        console.log("card dropped on rider test");
-      }).draggable();
-    }
-  };
-});
 
 fallingModule.directive("hand", function () {
   return {
     restrict: "A",
     link: function ($scope, element, attrs) {
       $(document).bind('mousemove', function (event) {
-        if ($scope.hasCard()) {
+        if ($scope.getMyHand()) {
           $('#hand').offset({
             left: (event.pageX - ($('#hand').width() / 2.0)),
             top: (event.pageY - ($('#hand').height() / 2.0))
           });
         }
-      })
-      .bind('mouseup', function (cursor) {
-        $('.rider').each(function (index) {
-          var rider = $(this);
-          // hit test - if the player is attempting to play their hand onto this
-          if ((cursor.pageX > rider.offset().left && // left edge
-              cursor.pageX < rider.offset().left + rider.width()) && // right edge
-              (cursor.pageY > rider.offset().top && // top edge
-              cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
-            var $rider = angular.element(this).scope();
-            // If card is successfully played on thie rider, clear the hand
-            // TODO: account for invalidated plays
-            if ($rider.playCard($scope.card)) {
-              $scope.clearHand();
-              console.log("drop callback");
-              console.log($scope);
-              // Don't let player draw another card until the move is validated
-              $scope.pendingValidation = true;
-            }
-          }
-        });
       });
+      // .bind('mouseup', function (cursor) {
+      //   $('.rider').each(function (index) {
+      //     var rider = $(this);
+      //     // hit test - if the player is attempting to play their hand onto this
+      //     if ((cursor.pageX > rider.offset().left && // left edge
+      //         cursor.pageX < rider.offset().left + rider.width()) && // right edge
+      //         (cursor.pageY > rider.offset().top && // top edge
+      //         cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
+      //       var $rider = angular.element(this).scope();
+      //       // If card is successfully played on thie rider, clear the hand
+      //       // TODO: account for invalidated plays
+      //       if ($rider.playCard()) {
+      //         $scope.clearHand();
+      //         console.log("drop callback");
+      //         // Don't let player draw another card until the move is validated
+      //         $scope.pendingValidation = true;
+      //       }
+      //     }
+      //   });
+      // });
     }
   };
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
