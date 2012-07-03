@@ -75,9 +75,17 @@ function GameController($scope) {
   };
   
   $scope.playCard = function (playerNumber) {
-    var player = $scope.gameState.players[playerNumber];
-    if (!player.rider) {
-      
+    var rider = $scope.gameState.players[playerNumber].rider;
+    var card = $scope.getMyHand();
+    
+    if (!rider.card && card.kind !== "extra") {
+      rider.card = card;
+      return true;
+    } else if (rider.card && card.kind === "extra") {
+      rider.extras += 1;
+      return true;
+    } else {
+      return false;
     }
   };
   
@@ -103,27 +111,24 @@ fallingModule.directive("hand", function () {
             top: (event.pageY - ($('#hand').height() / 2.0))
           });
         }
+      })
+      .bind('mouseup', function (cursor) {
+        $('.rider').each(function (index) {
+          var rider = $(this);
+          // hit test - if the player is attempting to play their hand onto this
+          if ((cursor.pageX > rider.offset().left && // left edge
+              cursor.pageX < rider.offset().left + rider.width()) && // right edge
+              (cursor.pageY > rider.offset().top && // top edge
+              cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
+            var $rider = angular.element(this).scope();
+            // If card is successfully played on thie rider, clear the hand
+            // TODO: account for invalidated plays
+            if ($rider.playCard()) {
+              $scope.pendingValidation = true;
+            }
+          }
+        });
       });
-      // .bind('mouseup', function (cursor) {
-      //   $('.rider').each(function (index) {
-      //     var rider = $(this);
-      //     // hit test - if the player is attempting to play their hand onto this
-      //     if ((cursor.pageX > rider.offset().left && // left edge
-      //         cursor.pageX < rider.offset().left + rider.width()) && // right edge
-      //         (cursor.pageY > rider.offset().top && // top edge
-      //         cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
-      //       var $rider = angular.element(this).scope();
-      //       // If card is successfully played on thie rider, clear the hand
-      //       // TODO: account for invalidated plays
-      //       if ($rider.playCard()) {
-      //         $scope.clearHand();
-      //         console.log("drop callback");
-      //         // Don't let player draw another card until the move is validated
-      //         $scope.pendingValidation = true;
-      //       }
-      //     }
-      //   });
-      // });
     }
   };
 });
