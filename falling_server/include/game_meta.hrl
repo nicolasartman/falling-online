@@ -1,0 +1,1 @@
+-record(game_meta, {listeners=[]}).
