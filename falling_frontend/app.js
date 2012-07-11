@@ -3,21 +3,103 @@
  $:true,
  us: true,
  _: true,
+ jQuery: true,
+ setTimeout: true,
  document: true,
- angular: true
+ angular: true,
+ WebSocket: true
 */
 
+
+console.log([3,4,5].join([4,6]))
 
 var us = _.noConflict();
 
 var myPlayerNumber = 0;
 
+
+// Creates a placeholder card that animates to the stack
+
+function animateDeal(card, playerNumber, stackNumber, animationDuration, continuation) {
+  // Initial card placeholder creation and insertion in the dom
+  var animCard = $("<div />", {
+    "class": "animated card",
+    "text": card.name
+  })
+  .offset({
+    top: 500,
+    left: "50%"
+  })
+  .css("-webkit-transition-duration", animationDuration + "s");
+  $("body").append(animCard);
+  // Trigger the animation - send the card to the requested stack
+  animCard.offset($("#player-" + playerNumber + "-stack-" + stackNumber).offset());
+  setTimeout(function () {
+    animCard.remove();
+  
+    if (continuation && us.isFunction(continuation)) {
+      continuation(card, playerNumber, stackNumber);
+    }
+  }, animationDuration * 1000);
+
+}
+
+// TODO: remove -- test stuff
+jQuery(document).ready(function($) {
+  // deal a card
+  animateDeal({ name: "poof", kind: "HIT" }, 0, 0, 1, function (card, playerNumber, stackNumber) {
+    var $gameCtrl = angular.element($("#app")).scope();
+    $gameCtrl.dealCard(card, playerNumber, stackNumber);
+    $gameCtrl.$apply();
+    
+    // then deal another
+    animateDeal({ name: "poof", kind: "HIT" }, 0, 0, 1, function (card, playerNumber, stackNumber) {
+      $gameCtrl.dealCard(card, playerNumber, stackNumber);
+      $gameCtrl.$apply();
+    });
+  });
+});
+
 var fallingModule = new angular.module("falling", []);
 
-function GameController($scope) {
+fallingModule.factory('Server', function () {
+  
+  var socket = new WebSocket("ws://localhost:8080")
+  
+  socket.onopen = function () {
+    console.log("Connected to server");
+    socket.send("data");
+  };
+  
+  socket.onmessage = function (message) {
+    console.log(message);
+  };
+  
+  socket.onerror = function (err) {
+    console.log("ERROR")
+    console.log(err)
+  }
+});
+
+fallingModule.controller('GameController', function ($scope, Server) {
   $scope.gameState = {
     players: []
   };
+
+  // Test method. TODO: delete
+  $scope.testDeal = function () {
+    console.log($scope.gameState)
+    if (!$scope.gameState.players[myPlayerNumber].stacks.length) {
+      $scope.gameState.players[myPlayerNumber].stacks.push([])
+      $scope.$apply()
+    }
+    animateDeal({ name: "hit", kind: "HIT" }, 0, 0, 0.25, function (card, playerNumber, stackNumber) {
+      var $gameCtrl = angular.element($("#app")).scope();
+      $gameCtrl.dealCard(card, playerNumber, stackNumber);
+      $gameCtrl.$apply();
+    });
+    console.log($scope.gameState.players[myPlayerNumber].stacks);
+  }
 
   // Sets up a new game with the specified number of players
   $scope.newGame = function (playerCount) {
@@ -65,12 +147,19 @@ function GameController($scope) {
   $scope.newGame(4);
 
   $scope.pickUpCardFromStack = function (stackNumber) {
+    var stack = $scope.gameState.players[myPlayerNumber].stacks[stackNumber];
     if (!$scope.getMyHand()) {
-      setMyHand($scope.gameState.players[myPlayerNumber].stacks[stackNumber].pop());
+      setMyHand(stack.pop());
+      // IF the stack is now empty, remove it from the player's stacks
+      if (stack.length === 0) {
+        $scope.gameState.players[myPlayerNumber].stacks.splice(stackNumber, 1);
+        console.log("Emptied stack");
+        console.log($scope.gameState.players[myPlayerNumber].stacks);
+      }
     }
   };
 
-  $scope.dealCard = function (playerNumber, stackNumber, card) {
+  $scope.dealCard = function (card, playerNumber, stackNumber) {
     $scope.gameState.players[playerNumber].stacks[stackNumber].push(card);
   };
   
@@ -78,7 +167,7 @@ function GameController($scope) {
     var rider = $scope.gameState.players[playerNumber].rider;
     var card = $scope.getMyHand();
     
-    if (!rider.card && card.kind !== "extra") {
+    if (!rider.card) {
       rider.card = card;
       setMyHand(null);
     } else if (rider.card && card.kind === "extra") {
@@ -93,11 +182,7 @@ function GameController($scope) {
     $scope.gameState.players[playerNumber].rider.card = null;
     $scope.gameState.players[playerNumber].rider.extras = 0;
   };
-
-  // TODO: remove in prod
-  $scope.dealCard(myPlayerNumber, 0, { name: "cheese", number: 22 });
-  $scope.dealCard(myPlayerNumber, 0, { name: "cheesier", number: 222 });
-}
+});
 
 
 fallingModule.directive("hand", function () {

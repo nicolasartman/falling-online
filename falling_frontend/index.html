@@ -1,7 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
   <head>
-
     <script src="http://code.angularjs.org/angular-1.0.1.min.js" type="text/javascript"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.js" type="text/javascript"></script>
@@ -12,19 +11,20 @@
   </head>
   <body>
     <div id="app" ng-app="falling" ng-controller="GameController">
-      <div hand="" class="card" id="hand" ng-show="getMyHand()">
-        {{getMyHand().number}}
+      <button ng-click="testDeal()">Deal a card to play 0 stack 0</button>
+      <div hand class="card" id="hand" ng-show="getMyHand()">
+        {{getMyHand()}}
       </div>
       <div>
         <div class="player" ng-repeat="(playerNumber, player) in gameState.players" id="player-{{playerNumber}}">
-          <div ng-repeat="(stackNumber, stack) in getStacks(playerNumber)">
+          <div ng-repeat="(stackNumber, stack) in getStacks(playerNumber)" id="player-{{playerNumber}}-stack-{{stackNumber}}">
             <div class="card" ng-repeat="card in stack" ng-mousedown="pickUpCardFromStack(stackNumber)">
               Card {{$index}}
             </div>
           </div>
           <div class="rider" playerNumber="{{playerNumber}}">
             <div class="card" ng-show="getRiderCard(playerNumber)">
-              {{player.rider.card}}
+              {{player.rider.card.name}}
             </div>
           </div>
         </div>

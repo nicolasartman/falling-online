@@ -1,5 +1,16 @@
 body {
   background-color: #070707;
+  
+  /* no scrolling */
+  overflow: hidden;
+  
+  /* Disable text selection */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .player {
@@ -23,6 +34,19 @@ body {
   border: 1px solid #999;
   background-color: #09f;
   z-index: 1;
+}
+
+/* an animated card for use during the deal animation */
+.animated.card {
+  -webkit-transition-property: top, left;
+  -moz-transition-property: top, left;
+  -o-transition-property: top, left;
+  transition-property: top, left;
+
+  -webkit-transition-timing-function: ease-out;
+  -moz-transition-timing-function:    ease-out;
+  -o-transition-timing-function:      ease-out;
+  transition-timing-function:         ease-out;  
 }
 
 .card-hovering-rider {
