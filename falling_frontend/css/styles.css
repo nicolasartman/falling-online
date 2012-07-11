@@ -68,6 +68,7 @@ body {
 }
 
 .rider {
+  padding: 0;
   position: absolute;
   bottom: 0px;
   left: 50%;
