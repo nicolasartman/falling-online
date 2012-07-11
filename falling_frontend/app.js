@@ -186,13 +186,15 @@ fallingModule.factory('game', function (server, myPlayerNumber) {
     };
     self.getRiderCard = getRiderCard;
 
-    var clearRider = function (player) {
+    var clearRider = function (playerNumber) {
+      var rider = players[playerNumber].rider;
+      
       // Special condition for skip - just remove one extra
-      if (player.rider.card.kind === "skip" && player.rider.extras) {
-        player.rider.extras -= 1;
+      if (rider.card.kind === "skip" && rider.extras) {
+        rider.extras -= 1;
       } else {
-        player.rider.card = null;
-        player.rider.extras = 0;
+        rider.card = null;
+        rider.extras = 0;
       }
     };
     self.clearRider = clearRider;
@@ -230,18 +232,17 @@ fallingModule.controller('GameController', function ($scope, game) {
 fallingModule.directive("hand", function (game) {
   return {
     restrict: "A",
-    link: function ($scope, element, attrs) {
+    link: function ($scope, element, attributes) {
       $(document).bind('mousemove', function (event) {
-        $('#hand').offset({
-          left: (event.pageX - ($('#hand').width() / 2.0)),
-          top: (event.pageY - ($('#hand').height() / 2.0))
+        $(element).offset({
+          left: (event.pageX - ($(element).width() / 2.0)),
+          top: (event.pageY - ($(element).height() / 2.0))
         });
-      })
-      .bind('mouseup', function (cursor) {
-        $('.rider').each(function (index) {
+      });
+      $(element).bind('mouseup', function (cursor) {
+        $(attributes.dropon).each(function (index) {
           var playerNumber = $(this).attr("playerNumber");
           var rider = $(this);
-          var $rider = angular.element(this).scope();
 
           // hit test - if the player is attempting to play their hand onto this
           if ((cursor.pageX > rider.offset().left && // left edge
@@ -251,8 +252,7 @@ fallingModule.directive("hand", function (game) {
 
             // TODO: account for invalidated plays
             game.playCard(playerNumber);
-            // TODO: why do i have to apply here? i'm calling a method on the service...
-            $rider.$apply();
+            $scope.$apply();
           }
         });
       });

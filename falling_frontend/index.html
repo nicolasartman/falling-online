@@ -11,19 +11,19 @@
   </head>
   <body>
     <div id="app" ng-app="falling" ng-controller="GameController">
-      <div hand class="card" id="hand" ng-show="gameState.getMyHand()">
-        {{gameState.getMyHand().kind}}
+      <div hand dropOn=".rider" class="card" id="hand" ng-show="gameState.getMyHand()">
+        {{gameState.getMyHand().kind | uppercase}}
       </div>
       <div>
         <div class="player" ng-repeat="(playerNumber, player) in gameState.getPlayers()" id="player-{{playerNumber}}">
           <div ng-repeat="(stackNumber, stack) in player.stacks" id="player-{{playerNumber}}-stack-{{stackNumber}}">
             <div class="card" ng-repeat="card in stack" ng-mousedown="gameState.pickUpCardFromStack(stackNumber)">
-              {{card.kind}}
+              {{card.kind | uppercase}}
             </div>
           </div>
           <div class="rider" playerNumber="{{playerNumber}}" ng-click="gameState.clearRider(playerNumber)">
             <div class="card" ng-show="gameState.getRiderCard(playerNumber)">
-              {{player.rider.card.kind}}
+              {{player.rider.card.kind | uppercase}}
             </div>
           </div>
         </div>
