@@ -17,12 +17,12 @@
       <div>
         <div class="player" ng-repeat="(playerNumber, player) in gameState.getPlayers()" id="player-{{playerNumber}}">
           <div ng-repeat="(stackNumber, stack) in player.stacks" id="player-{{playerNumber}}-stack-{{stackNumber}}">
-            <div class="card" ng-repeat="card in stack" ng-mousedown="pickUpCardFromStack(stackNumber)">
+            <div class="card" ng-repeat="card in stack" ng-mousedown="gameState.pickUpCardFromStack(stackNumber)">
               {{card.kind}}
             </div>
           </div>
-          <div class="rider" playerNumber="{{playerNumber}}" ng-click="clearRider(player)">
-            <div class="card" ng-show="getRiderCard(playerNumber)">
+          <div class="rider" playerNumber="{{playerNumber}}" ng-click="gameState.clearRider(playerNumber)">
+            <div class="card" ng-show="gameState.getRiderCard(playerNumber)">
               {{player.rider.card.kind}}
             </div>
           </div>

@@ -14,7 +14,7 @@
 
 var us = _.noConflict();
 
-var myPlayerNumber = 0;
+// var myPlayerNumber = 0;
 
 
 // Creates a placeholder card that animates to the stack
@@ -48,12 +48,12 @@ jQuery(document).ready(function ($) {
   // deal a card
   animateDeal({ name: "poof", kind: "HIT" }, 0, 0, 1, function (card, playerNumber, stackNumber) {
     var $gameCtrl = angular.element($("#app")).scope();
-    $gameCtrl.dealCard(card, playerNumber, stackNumber);
+    $gameCtrl.gameState.dealCard(card, playerNumber, stackNumber);
     $gameCtrl.$apply();
 
     // then deal another
     animateDeal({ name: "poof", kind: "HIT" }, 0, 0, 1, function (card, playerNumber, stackNumber) {
-      $gameCtrl.dealCard(card, playerNumber, stackNumber);
+      $gameCtrl.gameState.dealCard(card, playerNumber, stackNumber);
       $gameCtrl.$apply();
     });
   });
@@ -80,7 +80,9 @@ fallingModule.factory('server', function () {
   };
 });
 
-fallingModule.factory('game', function (server) {
+fallingModule.value("myPlayerNumber", 0);
+
+fallingModule.factory('game', function (server, myPlayerNumber) {
   var Game = function () {
     var self = {};
 
@@ -202,22 +204,22 @@ fallingModule.factory('game', function (server) {
 });
 
 fallingModule.controller('GameController', function ($scope, game) {
-  console.log(game)
+  console.log(game);
   $scope.gameState = game;
+  
+  // Remove - start a new game
+  game.newGame(4);
   
   // Test method. TODO: delete
   $scope.testDeal = function (playerNumber, stackNumber) {
-    console.log(playerNumber);
-    console.log(stackNumber);
     // console.log($scope.gameState)
     if (!$scope.gameState.getNumberOfStacks(playerNumber)) {
       $scope.gameState.addStack(playerNumber);
       $scope.$apply();
     }
-    animateDeal({ kind: "HIT" }, playerNumber, stackNumber, 0.25, function (card, playerNumber, stackNumber) {
-      var $gameCtrl = angular.element($("#app")).scope();
-      $gameCtrl.dealCard(card, playerNumber, stackNumber);
-      $gameCtrl.$apply();
+    animateDeal({ kind: "hit" }, playerNumber, stackNumber, 0.25, function (card, playerNumber, stackNumber) {
+      $scope.gameState.dealCard(card, playerNumber, stackNumber);
+      $scope.$apply();
     });
     console.log($scope.gameState.getStacks(playerNumber));
   };
@@ -225,7 +227,7 @@ fallingModule.controller('GameController', function ($scope, game) {
 });
 
 
-fallingModule.directive("hand", function () {
+fallingModule.directive("hand", function (game) {
   return {
     restrict: "A",
     link: function ($scope, element, attrs) {
@@ -247,9 +249,10 @@ fallingModule.directive("hand", function () {
               (cursor.pageY > rider.offset().top && // top edge
               cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
 
-
             // TODO: account for invalidated plays
-            $rider.playCard(playerNumber);
+            game.playCard(playerNumber);
+            // TODO: why do i have to apply here? i'm calling a method on the service...
+            $rider.$apply();
           }
         });
       });
