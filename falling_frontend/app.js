@@ -1,4 +1,5 @@
 /*global
+ window: true
  jquery:true,
  $:true,
  us: true,
@@ -61,21 +62,59 @@ jQuery(document).ready(function ($) {
 
 var FallingGame = new angular.module("falling", []);
 
+// The websocket URI to bind to
 FallingGame.value('SOCKET_ADDRESS', "ws://localhost:8080");
 
-FallingGame.factory('server', function (socketAddress) {
-  var socket = new WebSocket(socketAddress);
+// Easy switch for use during dev for fake web socket vs real one
+FallingGame.value('USE_FAKE_SOCKET', true);
 
-  socket.onopen = function () {
+FallingGame.factory('Socket', function (SOCKET_ADDRESS, USE_FAKE_SOCKET) {
+  // TODO: extract out into tests
+  var FakeWebSocket = function () {
+    var self = {};
+    
+    var pNum = 0, cardNum = 0;
+    
+    // default
+    
+    window.setInterval(function () {
+      console.log("Dealing");
+      self.onmessage({
+        "action": "deal",
+        "card": {
+          "kind": ("test" + (cardNum++))
+        },
+        "player": pNum, 
+        "stack": 0
+      });
+      
+      // rotate players
+      pNum = (pNum + 1) % 4; // hardcoded number of players for basic testing
+    }, 2000);
+    
+    return self;
+  };
+  
+  return (USE_FAKE_SOCKET ? new FakeWebSocket() : new WebSocket(SOCKET_ADDRESS));
+});
+
+FallingGame.factory('Server', function (Socket, GameState) {
+
+  Socket.onopen = function () {
     console.log("Connected to server");
-    socket.send("data");
+    Socket.send("data");
   };
 
-  socket.onmessage = function (message) {
-    console.log(message);
+  Socket.onmessage = function (message) {
+    // console.log(message);
+    if (message.action === 'deal') {
+      animateDeal(message.card, message.player, message.stack, 0.5, function (card, playerNumber, stackNumber) {
+        GameState.dealCard(card, playerNumber, stackNumber);
+      });
+    }
   };
 
-  socket.onerror = function (err) {
+  Socket.onerror = function (err) {
     console.log("ERROR");
     console.log(err);
   };
@@ -206,7 +245,7 @@ FallingGame.factory('GameState', function (myPlayerNumber) {
   return new Game();
 });
 
-FallingGame.controller('GameController', function ($scope, GameState) {
+FallingGame.controller('GameController', function ($scope, GameState, Server) {
   $scope.gameState = GameState;
   
   // Remove - start a new game
