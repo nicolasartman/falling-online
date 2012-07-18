@@ -61,9 +61,10 @@ jQuery(document).ready(function ($) {
 
 var fallingModule = new angular.module("falling", []);
 
+fallingModule.value('SOCKET_ADDRESS', "ws://localhost:8080");
 
-fallingModule.factory('server', function () {
-  var socket = new WebSocket("ws://localhost:8080");
+fallingModule.factory('server', function (socketAddress) {
+  var socket = new WebSocket(socketAddress);
 
   socket.onopen = function () {
     console.log("Connected to server");
@@ -82,7 +83,7 @@ fallingModule.factory('server', function () {
 
 fallingModule.value("myPlayerNumber", 0);
 
-fallingModule.factory('game', function (server, myPlayerNumber) {
+fallingModule.factory('GameState', function (myPlayerNumber) {
   var Game = function () {
     var self = {};
 
@@ -205,12 +206,11 @@ fallingModule.factory('game', function (server, myPlayerNumber) {
   return new Game();
 });
 
-fallingModule.controller('GameController', function ($scope, game) {
-  console.log(game);
-  $scope.gameState = game;
+fallingModule.controller('GameController', function ($scope, GameState) {
+  $scope.gameState = GameState;
   
   // Remove - start a new game
-  game.newGame(4);
+  $scope.gameState.newGame(4);
   
   // Test method. TODO: delete
   $scope.testDeal = function (playerNumber, stackNumber) {
