@@ -59,11 +59,11 @@ jQuery(document).ready(function ($) {
   });
 });
 
-var fallingModule = new angular.module("falling", []);
+var FallingGame = new angular.module("falling", []);
 
-fallingModule.value('SOCKET_ADDRESS', "ws://localhost:8080");
+FallingGame.value('SOCKET_ADDRESS', "ws://localhost:8080");
 
-fallingModule.factory('server', function (socketAddress) {
+FallingGame.factory('server', function (socketAddress) {
   var socket = new WebSocket(socketAddress);
 
   socket.onopen = function () {
@@ -81,9 +81,9 @@ fallingModule.factory('server', function (socketAddress) {
   };
 });
 
-fallingModule.value("myPlayerNumber", 0);
+FallingGame.value("myPlayerNumber", 0);
 
-fallingModule.factory('GameState', function (myPlayerNumber) {
+FallingGame.factory('GameState', function (myPlayerNumber) {
   var Game = function () {
     var self = {};
 
@@ -206,7 +206,7 @@ fallingModule.factory('GameState', function (myPlayerNumber) {
   return new Game();
 });
 
-fallingModule.controller('GameController', function ($scope, GameState) {
+FallingGame.controller('GameController', function ($scope, GameState) {
   $scope.gameState = GameState;
   
   // Remove - start a new game
@@ -228,7 +228,7 @@ fallingModule.controller('GameController', function ($scope, GameState) {
 });
 
 
-fallingModule.directive("hand", function (GameState) {
+FallingGame.directive("hand", function (GameState) {
   return {
     restrict: "A",
     link: function ($scope, element, attributes) {
