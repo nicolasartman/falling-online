@@ -225,11 +225,10 @@ fallingModule.controller('GameController', function ($scope, GameState) {
     });
     console.log($scope.gameState.getStacks(playerNumber));
   };
-
 });
 
 
-fallingModule.directive("hand", function (game) {
+fallingModule.directive("hand", function (GameState) {
   return {
     restrict: "A",
     link: function ($scope, element, attributes) {
@@ -251,7 +250,7 @@ fallingModule.directive("hand", function (game) {
               cursor.pageY < rider.offset().top + rider.height())) { // bottom edge
 
             // TODO: account for invalidated plays
-            game.playCard(playerNumber);
+            GameState.playCard(playerNumber);
             $scope.$apply();
           }
         });
