@@ -6,7 +6,7 @@
 {
   "messageType": "connect",
   "data": {
-    gameID: number
+    "gameID": <number>
   }
 }
 
@@ -23,7 +23,7 @@
 
 {
   "messageType": "set_ready",
-  data: {
+  "data": {
     "ready": boolean
   }
 }
@@ -114,27 +114,27 @@
 // ===================
 
 target = {
-  kind: "player" | "stack",
-  id: number
+  "kind": "player" | "stack",
+  "id": number
 }
 
-gameState: {
-  dealtCard: {
-    card: <card>,
-    target: <target>,
-    eta: number
+"gameState": {
+  "dealtCard": {
+    "card": <card>,
+    "target": <target>,
+    "eta": number
   }
-  players: [
+  "players": [
     {
-      rider: {
-        card: "hit" | "split" | "skip"
-        extras: number
+      "rider": {
+        "card": "hit" | "split" | "skip"
+        "extras": number
       } | null,
-      stacks: [
+      "stacks": [
         [<card>]
       ]
     }
   ]
 }
 
-card: "hit" | "split" | "skip" | "stop" | "push" | "pull" | "ground"
+"card": "hit" | "split" | "skip" | "stop" | "push" | "pull" | "ground"
