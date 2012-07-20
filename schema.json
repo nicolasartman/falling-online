@@ -28,7 +28,7 @@
   }
 }
 
-// Card Move
+// Card Move - TODO: update
 {
   "messageType": "play_card",
   "data": {
@@ -78,7 +78,7 @@
 {
   "messageType": "roster_update",
   "data": {
-   "players": [string]
+   "players": [<string>]
   }
 }
 
@@ -86,20 +86,34 @@
 {
   "messageType": "started",
   "data": {
-   "gameState": gamestate
+   "gameState": <gamestate>
   }
 }
 
-// Game State
+// Game State - TODO: change to delta format
 {
   "messageType": "game_state"
   "data": {
-    "gameState": gamestate
+    "gameState": <gamestate>
   }
 }
 
-// Card Tracking
+// Deal card
+{
+  "messageType": "deal_card",
+  "data": {
+    "card": <card>,
+    "playerNumber": <number>,
+    "stackNumber": <number>
+  }
+}
 
+// Card Move (draw into hand or move from hand to rider)
+{
+  // TODO
+}
+
+// Invalidate Move (reject a move from player's hand to a rider)
 
 // Game over
 {
