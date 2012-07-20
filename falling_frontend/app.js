@@ -19,22 +19,23 @@ var us = _.noConflict();
 
 
 // Creates a placeholder card that animates to the stack
-
+// TODO: encapsulate in card directive
 function animateDeal(card, playerNumber, stackNumber, animationDuration, continuation) {
   // Initial card placeholder creation and insertion in the dom
   var animCard = $("<div />", {
     "class": "animated card",
     "text": card.kind
   })
-  .offset({
-    top: 500,
-    left: "50%"
+  .css({
+    "top": ($(window).height()),
+    "left": ($(window).width()/2)
   })
   .css("-webkit-transition-duration", animationDuration + "s");
   $("body").append(animCard);
   // Trigger the animation - send the card to the requested stack
-  animCard.offset($("#player-" + playerNumber + "-stack-" + stackNumber).offset());
+  animCard.css($("#player-" + playerNumber + "-stack-" + stackNumber).offset());
   setTimeout(function () {
+    
     animCard.remove();
 
     if (continuation && us.isFunction(continuation)) {
@@ -43,22 +44,6 @@ function animateDeal(card, playerNumber, stackNumber, animationDuration, continu
   }, animationDuration * 1000);
 
 }
-
-// test stuff
-jQuery(document).ready(function ($) {
-  // deal a card
-  animateDeal({ name: "poof", kind: "HIT" }, 0, 0, 1, function (card, playerNumber, stackNumber) {
-    var $gameCtrl = angular.element($("#app")).scope();
-    $gameCtrl.gameState.dealCard(card, playerNumber, stackNumber);
-    $gameCtrl.$apply();
-
-    // then deal another
-    animateDeal({ name: "poof", kind: "HIT" }, 0, 0, 1, function (card, playerNumber, stackNumber) {
-      $gameCtrl.gameState.dealCard(card, playerNumber, stackNumber);
-      $gameCtrl.$apply();
-    });
-  });
-});
 
 var FallingGame = new angular.module("falling", []);
 
@@ -80,6 +65,10 @@ FallingGame.factory('Socket', function (SOCKET_ADDRESS, USE_FAKE_SOCKET) {
     window.setInterval(function () {
       console.log("Dealing");
       self.onmessage({
+        "action": "clear",
+        "player": pNum
+      });
+      self.onmessage({
         "action": "deal",
         "card": {
           "kind": ("test" + (cardNum++))
@@ -98,7 +87,7 @@ FallingGame.factory('Socket', function (SOCKET_ADDRESS, USE_FAKE_SOCKET) {
   return (USE_FAKE_SOCKET ? new FakeWebSocket() : new WebSocket(SOCKET_ADDRESS));
 });
 
-FallingGame.factory('Server', function (Socket, GameState) {
+FallingGame.factory('Server', function (Socket, GameState, $rootScope) {
 
   Socket.onopen = function () {
     console.log("Connected to server");
@@ -110,8 +99,14 @@ FallingGame.factory('Server', function (Socket, GameState) {
     if (message.action === 'deal') {
       animateDeal(message.card, message.player, message.stack, 0.5, function (card, playerNumber, stackNumber) {
         GameState.dealCard(card, playerNumber, stackNumber);
+        $rootScope.$apply();
       });
     }
+    else if (message.action === 'clear') {
+      GameState.clearRider(message.player);
+    }
+    
+    $rootScope.$apply();
   };
 
   Socket.onerror = function (err) {
@@ -157,15 +152,14 @@ FallingGame.factory('GameState', function (myPlayerNumber) {
     };
     self.getMyHand = getMyHand;
 
-    var pickUpCardFromStack = function (stackNumber) {
-      var stack = players[myPlayerNumber].stacks[stackNumber];
-      if (!getMyHand()) {
-        setMyHand(stack.pop());
-        // IF the stack is now empty, remove it from the player's stacks
-        if (stack.length === 0) {
-          players[myPlayerNumber].stacks.splice(stackNumber, 1);
-          console.log("Emptied stack");
-          console.log(players[myPlayerNumber].stacks);
+    var pickUpCardFromStack = function (playerNumber, stackNumber) {
+      // Only allow pickup from the player's own stacks
+      // TODO: move this into the view, since it really should be
+      // conditional ng-click binding and not handled here
+      if (playerNumber === myPlayerNumber) {
+        var stack = players[myPlayerNumber].stacks[stackNumber];
+        if (!getMyHand()) {
+          setMyHand(stack.pop());
         }
       }
     };
@@ -229,12 +223,14 @@ FallingGame.factory('GameState', function (myPlayerNumber) {
     var clearRider = function (playerNumber) {
       var rider = players[playerNumber].rider;
       
-      // Special condition for skip - just remove one extra
-      if (rider.card.kind === "skip" && rider.extras) {
-        rider.extras -= 1;
-      } else {
-        rider.card = null;
-        rider.extras = 0;
+      if (rider.card) {
+        // Special condition for skip - just remove one extra
+        if (rider.card.kind === "skip" && rider.extras) {
+          rider.extras -= 1;
+        } else {
+          rider.card = null;
+          rider.extras = 0;
+        }        
       }
     };
     self.clearRider = clearRider;
