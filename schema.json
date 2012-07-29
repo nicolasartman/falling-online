@@ -109,8 +109,19 @@
 }
 
 // Card Move (draw into hand or move from hand to rider)
-{
-  // TODO
+{ 
+  "messageType": "card move",
+  "data": {
+    "from": "deck" | { 
+      "playerID": <number>,
+      "location": "rider" | "hand" | <stackNumber>
+    } | "deck",
+    "to": { 
+      "playerID": <number>, 
+      "location": "rider" | "hand" | <stackNumber>
+    } | trash,
+    "card": <card>
+  }
 }
 
 // Invalidate Move (reject a move from player's hand to a rider)
