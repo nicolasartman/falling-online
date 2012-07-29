@@ -52,7 +52,7 @@ generate_deck() ->
 
 %externally facing game state update funcitons return a tuple of { game, delta list }
 % A delta list is a tuple which contains :
-%{ card move, {player, rider or hand} or deck, {player, stack or rider or hand} or trash, card }
+%{ card move, {player, rider or hand or stack} or deck, {player, stack or rider or hand} or trash, card }
 add_stacks(0, Player) ->
   Player;
 add_stacks(Count, Player) ->
@@ -73,6 +73,7 @@ get_player(PlayerId, PlayerList) ->
 set_player(PlayerId, Game, Player) ->
   Game#fgame{players=lists:keystore(PlayerId, #fplayer.id, Game#fgame.players, Player)}.
 
+% When the rider is cleared and there is no rider, bad_move will be returned.
 deal(Game) ->
   case Game#fgame.deal_stage of
     %Deal with rider
