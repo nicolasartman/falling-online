@@ -36,8 +36,19 @@ websocket_init(_Any, Req, []) ->
   %{reply, {text, create_error("No game found")}, Output, undefined}.
   {ok, CompactedReq, undefined, hibernate}.
 
-websocket_handle({text, Msg}, Req, PlayerId) ->
-  {reply, {text, falling_json:create_error("No game found", "game_not_found")}, Req, PlayerId}.
+websocket_handle({text, Msg}, Req, {GameId, PlayerId}) ->
+  ParsedMessage = falling_json:parse_client_message(Msg),
+  Reply = handle_client_message(ParsedMessage, GameId, PlayerId),
+  JsonReply = falling_json:encode_reply(Reply)
+  {reply, {text, JsonReply}, Req, PlayerId}.
+
+handle_client_message({Type, Args}, GameId, PlayerId) ->
+  %TODO finish me
+  io:format("Got ~p ~p~w", [Type, Args]),
+  {ok, GameMapping} = ets:lookup(falling_instances, GameId),
+  {ok, Reply} = gen_server:call(GameMapping#falling_mapping.pid, state),
+  Reply.
+  
 
 websocket_info(JsonMsg, Req, PlayerId) ->
   %io:format("Sending message ~s to ~w~n", [JsonMsg, self()]),
