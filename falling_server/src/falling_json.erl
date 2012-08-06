@@ -1,8 +1,17 @@
 -module(falling_json).
--export([deltas_to_json/1]).
+-export([deltas_to_json/1, create_error/2, create_new_game_response/1]).
+
+create_message(MessageType, Data) ->
+  jiffy:encode(create_message_form(MessageType, Data)).
 
 create_message_form(MessageType, Data) ->
   {[ {<<"messageType">>, MessageType}, {<<"data">>, Data} ]}.
+
+create_new_game_response(GameId) ->
+  create_message(<<"game_created">>, {[ { <<"game_id">>, GameId} ]}).
+
+create_error(Message, MsgType) ->
+  create_message(<<"error">>, {[ {<<"errorMessage">>, Message}, {<<"errorType">>, MsgType}]}).
 
 deltas_to_json(Deltas) ->
   JsonForm = create_deltas(Deltas, []),

@@ -3,8 +3,13 @@
 %-include("include/fgame.hrl").
 -include("include/game_meta.hrl").
 -export([start_link/0]).
--export([send_deal/2]).
+-export([new_instance/0, send_deal/2]).
 -export([init/1, handle_call/3]).
+
+new_instance() ->
+  {ok, Pid} = gen_server:start_link(falling_instance, [], []),
+  Pid.
+  
 
 start_link() ->
   gen_server:start_link(falling_instance, [], []).

@@ -65,6 +65,14 @@
 
 // Error Types: join_failed | game_not_found
 
+// Game Created
+{
+  "messageType": "game_created",
+  "data": {
+    "game_id": int,
+  }
+}
+
 // Connected
 {
   "messageType": "connected",
