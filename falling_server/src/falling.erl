@@ -3,8 +3,6 @@
 -export([new_game/1, play_card/3, draw_card/3, deal/1]).
 
 new_game(PlayerCount) ->
-  % Remove Me
-  random:seed(now()),
   Deck = generate_deck(),
   Shuffled = shuffle_deck(Deck, []),
   #fgame{deck=Shuffled, players = add_players(PlayerCount, [])}.

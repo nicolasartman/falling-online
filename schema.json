@@ -36,6 +36,13 @@
   }
 }
 
+{
+  "messageType": "draw",
+  "data:" {
+     "stack": <stack>,
+  }
+}
+
 // Get game state
 {
   "messageType": "get_game_state",
@@ -64,6 +71,14 @@
 }
 
 // Error Types: join_failed | game_not_found
+
+// Game Created
+{
+  "messageType": "game_created",
+  "data": {
+    "gameID": int,
+  }
+}
 
 // Connected
 {

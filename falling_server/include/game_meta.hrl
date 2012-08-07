@@ -1,1 +1,2 @@
 -record(game_meta, {listeners=[]}).
+-record(falling_mapping, {game_id=none, pid=none}).
