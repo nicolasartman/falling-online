@@ -1,2 +1,3 @@
--record(game_meta, {listeners=[]}).
+-record(game_meta, {listeners=[], players=[], cur_id=0}).
+-record(player_meta, {id, nickname, pid}).
 -record(falling_mapping, {game_id=none, pid=none}).

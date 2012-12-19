@@ -3,7 +3,7 @@
 %-include("include/fgame.hrl").
 -include("include/game_meta.hrl").
 -export([start_link/0]).
--export([new_instance/0, send_deal/2]).
+-export([new_instance/0]).
 -export([init/1, handle_call/3, handle_info/2]).
 
 new_instance() ->
@@ -21,8 +21,14 @@ handle_call({start_game, Speed, Count}, _From, {Meta, none}) ->
   Game = falling:new_game(Count),
   erlang:send_after(Speed, self(), {send_deal, Speed}),
   {reply, ok, {Meta, Game}};
+handle_call({join, Nickname}, {From, _Tag}, {Meta, none}) ->
+  {PlayerId, NewMeta} = add_player_to_game(From, Nickname, Meta),
+  {reply, {PlayerId, nickname_list(NewMeta)}, {NewMeta, none}};
+handle_call({join, _Nickname}, _From, {Meta, Game}) ->
+  {reply, {error, already_started}, {Meta, Game}};
 handle_call(listen, {From, _Tag}, {Meta, Game}) ->
-  {reply, ok, {Meta#game_meta{listeners = [From | Meta#game_meta.listeners]}, Game}};
+  NewMeta = add_spectator_to_game(From, Meta),
+  {reply, nickname_list(NewMeta), NewMeta, Game};
 handle_call(state, _From, {Meta, Game}) ->
   {reply, Game, {Meta, Game}};
 handle_call(_Any, _From, {Meta, {game_over, Winner, Game}}) ->
@@ -42,6 +48,16 @@ handle_call({play_card, FromPlayerId, ToPlayerId}, _From, {Meta, Game}) ->
   { NextGame, Deltas } = falling:play_card(FromPlayerId, ToPlayerId, Game),
   broadcast_deltas(Meta, Deltas),
   {reply, Deltas, {Meta, NextGame}}.
+
+nickname_list(#game_meta{players=Players}) ->
+  lists:foreach(fun(#player_meta{nickname=Nickname}) -> Nickname end, Players).
+
+add_spectator_to_game(Pid, #game_meta{listeners=Listeners} = Meta) ->
+  Meta#game_meta{listeners = [Pid | Listeners]}.
+
+add_player_to_game(Pid, Nickname, #game_meta{cur_id=CurId, players=Players} = Meta) ->
+  { CurId, Meta#game_meta{players=[#player_meta{id=CurId, nickname=Nickname, pid=Pid} | Players],
+                 cur_id = CurId + 1}}.
 
 handle_info({send_deal, Speed}, {Meta, Game}) ->
   case do_deal(Game, Meta) of
@@ -69,4 +85,6 @@ do_deal(Game, Meta) ->
 broadcast_deltas(_Meta, bad_move) ->
   ok;
 broadcast_deltas(Meta, DeltaList) ->
-  lists:foreach(fun (Listen) -> Listen ! DeltaList end, Meta#game_meta.listeners).
+  lists:foreach(fun (Listen) -> Listen ! DeltaList end, Meta#game_meta.listeners),
+  lists:foreach(fun (#player_meta{pid=Pid}) -> Pid ! DeltaList end, Meta#game_meta.players).
+

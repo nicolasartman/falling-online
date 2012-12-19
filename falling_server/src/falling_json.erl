@@ -16,7 +16,7 @@ parse_decoded_json(<<"draw">>, {[Param]}) ->
   {draw, parse_param(Param)};
 parse_decoded_json(<<"get_game_state">>, {[Param]}) ->
   {get_game_state, parse_param(Param)};
-parse_decoded_json(<<"rematch">, {[Param]}) ->
+parse_decoded_json(<<"rematch">>, {[Param]}) ->
   {rematch, parse_param(Param)}.
 
 parse_param_list([], ParsedParams) ->
@@ -35,7 +35,7 @@ parse_param({<<"playerType">>, PlayerType}) ->
     <<"spectator">> ->
       {player_type, spectator}
   end;
-parse_param({<<"ready">>, Ready) ->
+parse_param({<<"ready">>, Ready}) ->
   {ready, Ready};
 parse_param({<<"target">>, Target}) when is_integer(Target)->
   {target, Target}.
@@ -44,9 +44,7 @@ parse_param({<<"target">>, Target}) when is_integer(Target)->
 
 parse_client_message(Message) ->
   Decoded = jiffy:decode(Message),
-  parse_decoded_client_message(Decoded).
-
-parse_decoded_client_message({[ {<<"messageType">>, 
+  parse_decoded_json(Decoded).
 
 create_message(MessageType, Data) ->
   jiffy:encode(create_message_form(MessageType, Data)).

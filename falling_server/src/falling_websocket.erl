@@ -38,17 +38,30 @@ websocket_init(_Any, Req, []) ->
 
 websocket_handle({text, Msg}, Req, {GameId, PlayerId}) ->
   ParsedMessage = falling_json:parse_client_message(Msg),
-  Reply = handle_client_message(ParsedMessage, GameId, PlayerId),
-  JsonReply = falling_json:encode_reply(Reply)
-  {reply, {text, JsonReply}, Req, PlayerId}.
+  {Reply, NewSocketState} = handle_client_message(ParsedMessage, GameId, PlayerId),
+  JsonReply = falling_json:encode_reply(Reply),
+  {reply, {text, JsonReply}, Req, NewSocketState}.
 
+%handle_client_message({connect, GameId}, _oldGameId, _OldPlayerId) ->
+  %{send_game(listen, GamedId), GameId};
+handle_client_message({join, ParamList}, _oldGameId, _OldPlayerId) ->
+  {value, {game_id, GameId}, ParamListGameId} = lists:keyfind(game_id, 1, ParamList),
+  {value, {nickname, Nickname}, ParamListNickname} = lists:keyfind(nickname, 1, ParamListGameId),
+  {value, {player_type, PlayerType}, _} = lists:keyfind(player_type, 1, ParamListGameId),
+  send_game(listen, GameId);
 handle_client_message({Type, Args}, GameId, PlayerId) ->
   %TODO finish me
-  io:format("Got ~p ~p~w", [Type, Args]),
+  io:format("Got ~p ~p~n", [Type, Args]),
   {ok, GameMapping} = ets:lookup(falling_instances, GameId),
   {ok, Reply} = gen_server:call(GameMapping#falling_mapping.pid, state),
   Reply.
-  
+
+send_game(Message,GameId) ->
+  Pid = find_game(GameId),
+  {ok, Reply} = gen_server:call(Pid, Message).
+find_game(GameId) ->
+  {ok, Mapping} = ets:lookup(falling_instances, GameId),
+  Mapping#falling_mapping.pid.
 
 websocket_info(JsonMsg, Req, PlayerId) ->
   %io:format("Sending message ~s to ~w~n", [JsonMsg, self()]),
