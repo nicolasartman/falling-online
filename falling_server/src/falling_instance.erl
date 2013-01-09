@@ -50,7 +50,7 @@ handle_call({play_card, FromPlayerId, ToPlayerId}, _From, {Meta, Game}) ->
   {reply, Deltas, {Meta, NextGame}}.
 
 nickname_list(#game_meta{players=Players}) ->
-  lists:foreach(fun(#player_meta{nickname=Nickname}) -> Nickname end, Players).
+  lists:foldl(fun(#player_meta{nickname=Nickname}, Names) -> [Nickname|Names] end, [], Players).
 
 add_spectator_to_game(Pid, #game_meta{listeners=Listeners} = Meta) ->
   Meta#game_meta{listeners = [Pid | Listeners]}.

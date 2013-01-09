@@ -30,7 +30,7 @@ init([]) ->
   Dispatch = [ { '_', [ { [<<"play">>], falling_websocket, []} ,
                         { [<<"new_game">>], falling_websocket, []} ] } ],
   CowboySpec = cowboy:child_spec(falling_websocket, 2024,
-                            cowboy_tcp_transport, [{port, 8081}],
+                            cowboy_tcp_transport, [{port, 8080}],
                             cowboy_http_protocol, [{dispatch, Dispatch}]),
   {ok, { {one_for_one, 5, 10},
        [ CowboySpec ]}}.

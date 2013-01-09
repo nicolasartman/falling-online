@@ -40,7 +40,13 @@ parse_param({<<"ready">>, Ready}) ->
 parse_param({<<"target">>, Target}) when is_integer(Target)->
   {target, Target}.
 
-    
+encode_reply({connected, Started, PlayerList}) ->
+  create_message(<<"connected">>, {[ {<<"started">>, Started]}, {<<"players">>, PlayerList} ]});
+encode_reply({error, Reason, Desc}) ->
+  create_message(<<"error">>, {[ {<<"errorType">>, reason_to_text(Reason)]}, {<<"errorMessage">>, Desc} ]}).
+
+reason_to_text(already_started) ->
+  <<"already_started">>.
 
 parse_client_message(Message) ->
   Decoded = jiffy:decode(Message),

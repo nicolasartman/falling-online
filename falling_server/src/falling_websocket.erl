@@ -34,7 +34,7 @@ websocket_init(_Any, Req, []) ->
   CompactedReq = cowboy_http_req:compact(Req),
   %Pid = Req#http_req.pid,
   %{reply, {text, create_error("No game found")}, Output, undefined}.
-  {ok, CompactedReq, undefined, hibernate}.
+  {ok, CompactedReq, {none, none}, hibernate}.
 
 websocket_handle({text, Msg}, Req, {GameId, PlayerId}) ->
   ParsedMessage = falling_json:parse_client_message(Msg),
@@ -45,22 +45,33 @@ websocket_handle({text, Msg}, Req, {GameId, PlayerId}) ->
 %handle_client_message({connect, GameId}, _oldGameId, _OldPlayerId) ->
   %{send_game(listen, GamedId), GameId};
 handle_client_message({join, ParamList}, _oldGameId, _OldPlayerId) ->
-  {value, {game_id, GameId}, ParamListGameId} = lists:keyfind(game_id, 1, ParamList),
-  {value, {nickname, Nickname}, ParamListNickname} = lists:keyfind(nickname, 1, ParamListGameId),
-  {value, {player_type, PlayerType}, _} = lists:keyfind(player_type, 1, ParamListGameId),
-  send_game(listen, GameId);
+  {value, {game_id, GameId}, ParamListGameId} = lists:keytake(game_id, 1, ParamList),
+  {value, {nickname, Nickname}, ParamListNickname} = lists:keytake(nickname, 1, ParamListGameId),
+  {value, {player_type, PlayerType}, _} = lists:keytake(player_type, 1, ParamListNickname),
+  GameReply = handle_new_listen(GameId, Nickname, PlayerType),
+  create_connected_response(GameReply);
 handle_client_message({Type, Args}, GameId, PlayerId) ->
-  %TODO finish me
+  %TODO Add the rest of the message types
   io:format("Got ~p ~p~n", [Type, Args]),
   {ok, GameMapping} = ets:lookup(falling_instances, GameId),
   {ok, Reply} = gen_server:call(GameMapping#falling_mapping.pid, state),
   Reply.
 
+create_connected_response({error, Reason}) ->
+  {error, Reason, ""};
+create_connected_response({PlayerId, Nicknames}) ->
+  {connected, PlayerId, Nicknames}.
+
+handle_new_listen(GameId, Nickname, spectator) ->
+  send_game({listen, Nickname}, GameId);
+handle_new_listen(GameId, Nickname, player) ->
+  send_game({join, Nickname}, GameId).
+
 send_game(Message,GameId) ->
   Pid = find_game(GameId),
-  {ok, Reply} = gen_server:call(Pid, Message).
+  Reply = gen_server:call(Pid, Message).
 find_game(GameId) ->
-  {ok, Mapping} = ets:lookup(falling_instances, GameId),
+  [Mapping] = ets:lookup(falling_instances, GameId),
   Mapping#falling_mapping.pid.
 
 websocket_info(JsonMsg, Req, PlayerId) ->
